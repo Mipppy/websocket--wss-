@@ -19,7 +19,7 @@ export function createGameWindowEvents() {
 }
 
 export function initWebSocket() {
-    socket = new WebSocket("https://blq.pythonanywhere.com/")
+    socket = new WebSocket("https://websocket-wss.vercel.app/")
     socket.onopen = () => {
         ping();
         getPlayerData();
