@@ -1,9 +1,14 @@
-import * as renderer from "./render.js"
-import {x, y} from "./engine.js"
+import { pingPanel } from "./engine.js";
+import { loadLevel } from "./mapping.js";
 export var socket;
 export var pingInterval = 20
 export var playerUUID = crypto.randomUUID();
 export var playerData;
+export var currentlyUpdated
+let pingStartTime = 0;
+let ping1 = 0;
+let pingsPerSecond = [];
+let highestPing = 0;
 
 export function createGameWindowEvents() {
     window.onbeforeunload = function() {
@@ -18,6 +23,7 @@ export function initWebSocket() {
     socket.onopen = () => {
         ping();
         getPlayerData();
+        loadLevel();
     }
     
     socket.onmessage = (event) => {
@@ -34,32 +40,75 @@ export function ping() {
 }
 
 export function getPlayerData() {
-    sendPlayerData();
     if (socket.readyState == socket.OPEN) {
-        socket.send(JSON.stringify({type: 'data'}))
+        pingStartTime = Date.now();
+        socket.send(JSON.stringify({type: 'data', uuid: playerUUID}))
     }
 }
 
-export function sendPlayerData() {
+export function sendMoveData(xvel, yvel) {
     if (socket.readyState == socket.OPEN) {
-        socket.send(JSON.stringify({uuid : playerUUID, type: 'coord', x: x, y:y}))
+        socket.send(JSON.stringify({type: "move", uuid: playerUUID, xvel: xvel, yvel: yvel}))
+    }  
+}
+
+export function sendXYData(x,y) {
+    if (socket.readyState == socket.OPEN) {
+        socket.send(JSON.stringify({type: "xy", uuid: playerUUID, x:x, y:y}))
     }
 }
+
+export async function getLevelData() {
+    return await new Promise((resolve, reject) => {
+        if (socket.readyState == socket.OPEN) {
+            socket.send(JSON.stringify({ type: "getLevel" }));
+        } else {
+            reject(new Error("Socket is not open"));
+        }
+
+        function onMessage(event) {
+            var parsed = JSON.parse(event.data);
+            if (parsed.type == "levelData") {
+                socket.removeEventListener("message", onMessage);
+                resolve(parsed.level);
+            }
+        }
+
+        socket.addEventListener("message", onMessage);
+        setTimeout(() => {
+            socket.removeEventListener("message", onMessage); 
+            reject(new Error("Timeout waiting for level data"));
+        }, 5000);
+    });
+}
+
+function calculatePing() {
+    ping1 = Date.now() - pingStartTime;
+    pingsPerSecond.push(ping1);
+
+    if (pingsPerSecond.length > 60) {
+        pingsPerSecond.shift();
+    }
+    
+    if (ping1 > highestPing) {
+        highestPing = ping1;
+    }
+}
+
 
 export function handleMessages(message) {
     var parsed = JSON.parse(message);
     if (parsed.type == "__pong__") {
-        console.log("Pinged and Ponged")
     }
     if (parsed.type == "playerData") {
         playerData = parsed.players;
-        try {
-            renderer.renderPlayers(playerData);
-
-        } catch(Error) {
-            null;
-        }
+        calculatePing()
         getPlayerData();
     }
 }
 
+setInterval(() => {
+    try  {
+        pingPanel.update(ping1, highestPing);
+    } catch(e) {}
+}, .1)

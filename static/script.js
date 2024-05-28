@@ -1,8 +1,9 @@
-import * as game from "./gamesocket.js"
+import { initWebSocket } from "./gamesocket.js"
 import { initCanvas } from "./render.js";
 import { createWindowEvents } from "./windowevents.js";
-import {gameLoop} from "./engine.js"
+import {gameLoop, loadFPS} from "./engine.js"
 initCanvas(document);
-game.initWebSocket();
+initWebSocket();
 createWindowEvents();
+loadFPS()
 requestAnimationFrame(gameLoop);

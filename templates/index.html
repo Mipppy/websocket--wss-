@@ -3,6 +3,13 @@
     <head>
         <title>WebSocket Test</title>
         <link rel="shortcut icon" href="#">
+        <link rel="modulepreload" href="/static/engine.js" />
+        <link rel="modulepreload" href="/static/gamesocket.js" />
+        <link rel="modulepreload" href="/static/mapping.js" />
+        <link rel="modulepreload" href="/static/windowevents.js" />
+        <link rel="modulepreload" href="/static/imagehandler.js" />
+        <link rel="modulepreload" href="/static/render.js" />
+
         <style>
             html, body {
                 margin: 0 !important;
@@ -12,7 +19,7 @@
         </style>
     </head>
     <body style="width: 100vw; height: 100vh">
-        <script src="{{ url_for('static', filename='script.js') }}" type="module"> </script>
+        <script src="/static/script.js" type="module"> </script>
         <canvas id="gamewindow">
     </body>
 </html>
