@@ -19,7 +19,7 @@ export function createGameWindowEvents() {
 }
 
 export function initWebSocket() {
-    socket = new WebSocket("https://websocket-wss.vercel.app/")
+    socket = new WebSocket("https://websocket-wss.onrender.com")
     socket.onopen = () => {
         ping();
         getPlayerData();
