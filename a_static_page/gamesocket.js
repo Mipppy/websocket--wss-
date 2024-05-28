@@ -19,7 +19,7 @@ export function createGameWindowEvents() {
 }
 
 export function initWebSocket() {
-    socket = new WebSocket("http://localhost:8000")
+    socket = new WebSocket("wss://websocket-wss.onrender.com")
     socket.onopen = () => {
         ping();
         getPlayerData();
