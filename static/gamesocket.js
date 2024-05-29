@@ -23,7 +23,7 @@ export function createGameWindowEvents() {
 }
 
 export function initWebSocket() {
-    socket = new WebSocket("http://localhost:8000");
+    socket = new WebSocket("https://wwww-3ods.onrender.com");
     socket.onopen = () => {
         loadLevel();
         sendMoveData(velocityX, velocityY);

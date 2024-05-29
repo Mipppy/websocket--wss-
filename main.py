@@ -376,7 +376,7 @@ async def handler(websocket, path):
                 for player in players[:]:
                     if player["uuid"] != player_uuid:
                         player["lastRequest"] += 1
-                        if player["lastRequest"] > 9999:
+                        if player["lastRequest"] > 500:
                             players.remove(player)
                     else:
                         player["lastRequest"] = 0

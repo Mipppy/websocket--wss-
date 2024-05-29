@@ -3,7 +3,7 @@ import { currentPlayer, renderBoxes, renderPlayers } from "./render.js";
 import { boxes } from "./mapping.js"
 export var x = Math.floor(Math.random() * 1000);
 export var y = Math.floor(Math.random() * 1000);
-export var speed = 0.15;
+export var speed = 0.65;
 export var friction = 0.9;
 export var velocityX = 0;
 export var velocityY = 0;
@@ -96,10 +96,10 @@ export function gameLoop() {
     loop++;
     const currentTime = performance.now();
     const elapsedTime = currentTime - lastFrameTime;
+    reconcilePosition();
     
     updatePredictedPosition();
 
-    reconcilePosition();
 
     if (!checkIfMoved() || loop < 60) {
         try {
@@ -129,19 +129,17 @@ export let predictedY = 0;
 
 function updatePredictedPosition() {
 
-    predictedX *= friction;
-    predictedY *= friction;
-    predictedX += velocityX
-    predictedY += velocityY
+    // predictedX *= friction;
+    // predictedY *= friction;
+    // predictedX += velocityX
+    // predictedY += velocityY
     console.log(predictedX + ", " + predictedY)
 }
 
 function reconcilePosition() {
     try {
-        if (!shouldUpdateWithPredicted) {
-            predictedX = currentPlayer.x;
-            predictedY = currentPlayer.y;
-        }
+        predictedX = currentPlayer.x;
+        predictedY = currentPlayer.y;
     } catch(e) {}
 
 }
