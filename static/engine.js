@@ -3,7 +3,7 @@ import { currentPlayer, renderBoxes, renderPlayers } from "./render.js";
 import { boxes } from "./mapping.js"
 export var x = Math.floor(Math.random() * 1000);
 export var y = Math.floor(Math.random() * 1000);
-export var speed = 0.65;
+export var speed = 1.15;
 export var friction = 0.9;
 export var velocityX = 0;
 export var velocityY = 0;
@@ -65,9 +65,6 @@ export function move() {
     velocityX *= friction;
     velocityY *= friction;
 
-    if (Math.abs(velocityX) < 0.0001) velocityX = 0;
-    if (Math.abs(velocityY) < 0.0001) velocityY = 0;
-
     if (velocityX !== 0 || velocityY !== 0) {
         sendMoveData(velocityX, velocityY);
     }
@@ -96,23 +93,26 @@ export function gameLoop() {
     loop++;
     const currentTime = performance.now();
     const elapsedTime = currentTime - lastFrameTime;
-    reconcilePosition();
-    
+
+    if (Math.abs(velocityX) < 0.0001) velocityX = 0;
+    if (Math.abs(velocityY) < 0.0001) velocityY = 0;
+
     updatePredictedPosition();
 
+    reconcilePosition();
 
     if (!checkIfMoved() || loop < 60) {
         try {
             renderPlayers(playerData);
-        } catch (error) {}
+        } catch (error) { }
         try {
             renderBoxes(boxes);
-        } catch (error) {}
+        } catch (error) { }
     }
 
     try {
         stats.update();
-    } catch (error) {}
+    } catch (error) { }
 
     if (elapsedTime >= frameInterval) {
         // This limits the movement speed to 60 times a second, so people with higher hertz monitors don't move faster, but letting them render faster
@@ -128,31 +128,31 @@ export let predictedX = 0;
 export let predictedY = 0;
 
 function updatePredictedPosition() {
+    velocityX *= friction;
+    velocityY *= friction;
 
-    // predictedX *= friction;
-    // predictedY *= friction;
-    // predictedX += velocityX
-    // predictedY += velocityY
-    console.log(predictedX + ", " + predictedY)
+    predictedX += velocityX;
+    predictedY += velocityY;
 }
 
 function reconcilePosition() {
     try {
         predictedX = currentPlayer.x;
         predictedY = currentPlayer.y;
-    } catch(e) {}
-
+    } catch (e) {
+    }
 }
+
 
 
 export function loadFPS() {
     var script = document.createElement('script');
     script.src = 'https://mrdoob.github.io/stats.js/build/stats.min.js';
     document.head.appendChild(script);
-    script.onload = () => { 
+    script.onload = () => {
         stats = new Stats();
         document.body.appendChild(stats.dom);
-        pingPanel = stats.addPanel( new Stats.Panel( 'PING', '#f08', '#201' ) );
-        stats.showPanel( 0 )
+        pingPanel = stats.addPanel(new Stats.Panel('PING', '#f08', '#201'));
+        stats.showPanel(0)
     };
 }

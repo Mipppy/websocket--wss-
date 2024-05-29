@@ -419,7 +419,10 @@ async def handler(websocket, path):
                         
             elif data["type"] == "getLevel":
                 await websocket.send(json.dumps({"type": "levelData", "level": level}))
-                
+            
+            elif data["type"] == "playerCount":
+                await websocket.send(json.dumps({"type": "playerCount", "count": len(players)}))
+            
     except Exception as e:
         print(f"Error: {e}")
 

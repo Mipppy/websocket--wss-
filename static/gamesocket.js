@@ -1,5 +1,6 @@
 import { pingPanel, velocityX, velocityY } from "./engine.js";
 import { loadLevel } from "./mapping.js";
+import { handlePlayerCount } from "./script.js";
 
 export let socket;
 export const pingInterval = 20;
@@ -8,6 +9,7 @@ export let playerData;
 export let shouldUpdateWithPredicted = false;
 let pingStartTime = 0;
 let ping1 = 0;
+let lastRequest = 0;
 const PING_CHECK_THRESHOLD = 50;
 const PING_UPDATE_INTERVAL = 50;
 const LEVEL_DATA_TIMEOUT = 5000;
@@ -23,21 +25,16 @@ export function createGameWindowEvents() {
 }
 
 export function initWebSocket() {
-    socket = new WebSocket("https://wwww-3ods.onrender.com");
+    socket = new WebSocket("http://localhost:8000");
     socket.onopen = () => {
-        loadLevel();
-        sendMoveData(velocityX, velocityY);
-        getPlayerData();
-        socket.onerror = function(event) {
-            console.log(event)
-            shouldUpdateWithPredicted = true;
-        };
+        console.log("Opened websocket")
     };
     socket.onmessage = handleMessages;
 }
 
 export function getPlayerData() {
     if (socket && socket.readyState === WebSocket.OPEN) {
+        shouldUpdateWithPredicted = false;
         socket.send(JSON.stringify({ type: 'data', uuid: playerUUID }));
         pingStartTime = Date.now();
     }
@@ -51,7 +48,7 @@ export function sendMoveData(xvel, yvel) {
 
 export async function getLevelData() {
     return await new Promise((resolve, reject) => {
-        if (socket && socket.readyState === WebSocket.OPEN) {
+        if (socket && socket.readyState === socket.OPEN) {
             socket.send(JSON.stringify({ type: "getLevel" }));
             const onMessage = event => {
                 const parsed = JSON.parse(event.data);
@@ -75,8 +72,12 @@ export function handleMessages(event) {
     const parsed = JSON.parse(event.data);
     if (parsed.type === "playerData") {
         playerData = parsed.players;
+        shouldUpdateWithPredicted = true;
         ping1 = Date.now() - pingStartTime;
         getPlayerData();
+    }
+    else if (parsed.type === "playerCount") {
+        handlePlayerCount(parsed.count)
     }
 }
 
@@ -87,3 +88,15 @@ setInterval(() => {
         // Handle potential errors
     }
 }, PING_UPDATE_INTERVAL);
+
+
+export function pollPlayerCount() {
+    try {
+        if (socket && socket.readyState === socket.OPEN) {
+            socket.send(JSON.stringify({"type": "playerCount"}))
+        }
+    } catch(e) {}
+}
+
+setInterval(pollPlayerCount, 1000)
+

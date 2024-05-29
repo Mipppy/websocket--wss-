@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <title>WebSocket Test</title>
         <link rel="shortcut icon" href="#">
@@ -12,13 +12,79 @@
 
         <style>
             html, body {
-                margin: 0 !important;
-                padding: 0 !important;
+                height: 100%;
+                margin: 0;
+                padding: 0;
                 overflow: hidden;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                font-family: 'Arial', sans-serif;
+            }
+    
+
+            #joinGameContainer {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                height: 100%;
+            }
+            
+            #joinGameInfo {
+                text-align: center;
+                background: rgba(255, 255, 255, 0.1);
+                padding: 40px;
+                border-radius: 15px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                backdrop-filter: blur(10px);
+                color: white;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                -webkit-transform: translate(-50%, -50%);
+                transform: translate(-50%, -50%);
+                transition: 0.3s;
+            }
+            
+            #joinGameInfo:hover {  
+                transition: 0.3s;
+                box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5);
+            }
+
+            #joinGameButton {
+                padding: 20px 40px;
+                font-size: 24px;
+                cursor: pointer;
+                border: none;
+                border-radius: 10px;
+                background-color: #28a745;
+                color: white;
+                transition: background-color 0.3s ease, transform 0.3s ease;
+                margin-top: 20px;
+            }
+            
+            #joinGameButton:hover {
+                background-color: #218838;
+                transform: scale(1.05);
+            }
+            
+            #joinGameButton:active {
+                background-color: #1e7e34;
+                transform: scale(1);
             }
         </style>
     </head>
     <body style="width: 100vw; height: 100vh">
+        <div id="joinGameContainer">
+            <div id="joinGameInfo">
+                <h1>Welcome to the Game!</h1>
+                <p id="playersOnline" style="display: inline-block">Players Online:&nbsp<p id="playerCount" style="display: inline-block"> </p></p>
+                <button id="joinGameButton">Join Game</button>
+            </div>
+        </div>
+        <script src="/static/menu.js" type="module"></script>
         <script src="/static/script.js" type="module"> </script>
         <canvas id="gamewindow">
     </body>
