@@ -1,114 +1,89 @@
-import { pingPanel } from "./engine.js";
+import { pingPanel, velocityX, velocityY } from "./engine.js";
 import { loadLevel } from "./mapping.js";
-export var socket;
-export var pingInterval = 20
-export var playerUUID = crypto.randomUUID();
-export var playerData;
-export var currentlyUpdated
+
+export let socket;
+export const pingInterval = 20;
+export const playerUUID = crypto.randomUUID();
+export let playerData;
+export let shouldUpdateWithPredicted = false;
 let pingStartTime = 0;
 let ping1 = 0;
-let pingsPerSecond = [];
-let highestPing = 0;
+const PING_CHECK_THRESHOLD = 50;
+const PING_UPDATE_INTERVAL = 50;
+const LEVEL_DATA_TIMEOUT = 5000;
 
 export function createGameWindowEvents() {
     window.onbeforeunload = function() {
-        socket.onclose = function () {};
-        socket.send(JSON.stringify({uuid: playerUUID, type: "disconnect"}));
-        socket.close();
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.onclose = () => {};
+            socket.send(JSON.stringify({ uuid: playerUUID, type: "disconnect" }));
+            socket.close();
+        }
     };
 }
 
 export function initWebSocket() {
-    socket = new WebSocket("http://localhost:8000")
+    socket = new WebSocket("http://localhost:8000");
     socket.onopen = () => {
-        ping();
-        getPlayerData();
         loadLevel();
-    }
-    
-    socket.onmessage = (event) => {
-        handleMessages(event.data);
-    }
-}
-
-export function ping() {
-    setInterval(() => {
-        if (socket.readyState == socket.OPEN) {
-            socket.send(JSON.stringify({uuid: playerUUID, type: "__ping__"}));
-        }
-    }, pingInterval * 100);
+        sendMoveData(velocityX, velocityY);
+        getPlayerData();
+        socket.onerror = function(event) {
+            console.log(event)
+            shouldUpdateWithPredicted = true;
+        };
+    };
+    socket.onmessage = handleMessages;
 }
 
 export function getPlayerData() {
-    if (socket.readyState == socket.OPEN) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'data', uuid: playerUUID }));
         pingStartTime = Date.now();
-        socket.send(JSON.stringify({type: 'data', uuid: playerUUID}))
     }
 }
 
 export function sendMoveData(xvel, yvel) {
-    if (socket.readyState == socket.OPEN) {
-        socket.send(JSON.stringify({type: "move", uuid: playerUUID, xvel: xvel, yvel: yvel}))
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: "move", uuid: playerUUID, xvel, yvel }));
     }  
-}
-
-export function sendXYData(x,y) {
-    if (socket.readyState == socket.OPEN) {
-        socket.send(JSON.stringify({type: "xy", uuid: playerUUID, x:x, y:y}))
-    }
 }
 
 export async function getLevelData() {
     return await new Promise((resolve, reject) => {
-        if (socket.readyState == socket.OPEN) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({ type: "getLevel" }));
+            const onMessage = event => {
+                const parsed = JSON.parse(event.data);
+                if (parsed.type === "levelData") {
+                    socket.removeEventListener("message", onMessage);
+                    resolve(parsed.level);
+                }
+            };
+            socket.addEventListener("message", onMessage);
+            setTimeout(() => {
+                socket.removeEventListener("message", onMessage); 
+                reject(new Error("Timeout waiting for level data"));
+            }, LEVEL_DATA_TIMEOUT);
         } else {
             reject(new Error("Socket is not open"));
         }
-
-        function onMessage(event) {
-            var parsed = JSON.parse(event.data);
-            if (parsed.type == "levelData") {
-                socket.removeEventListener("message", onMessage);
-                resolve(parsed.level);
-            }
-        }
-
-        socket.addEventListener("message", onMessage);
-        setTimeout(() => {
-            socket.removeEventListener("message", onMessage); 
-            reject(new Error("Timeout waiting for level data"));
-        }, 5000);
     });
 }
 
-function calculatePing() {
-    ping1 = Date.now() - pingStartTime;
-    pingsPerSecond.push(ping1);
-
-    if (pingsPerSecond.length > 60) {
-        pingsPerSecond.shift();
-    }
-    
-    if (ping1 > highestPing) {
-        highestPing = ping1;
-    }
-}
-
-
-export function handleMessages(message) {
-    var parsed = JSON.parse(message);
-    if (parsed.type == "__pong__") {
-    }
-    if (parsed.type == "playerData") {
+export function handleMessages(event) {
+    const parsed = JSON.parse(event.data);
+    if (parsed.type === "playerData") {
         playerData = parsed.players;
-        calculatePing()
+        ping1 = Date.now() - pingStartTime;
         getPlayerData();
     }
 }
 
 setInterval(() => {
     try  {
-        pingPanel.update(ping1, highestPing);
-    } catch(e) {}
-}, .1)
+        pingPanel.update(ping1, ping1 < PING_CHECK_THRESHOLD ? PING_CHECK_THRESHOLD : 150);
+    } catch(e) {
+        // Handle potential errors
+    }
+}, PING_UPDATE_INTERVAL);

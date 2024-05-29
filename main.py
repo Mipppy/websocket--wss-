@@ -154,7 +154,7 @@
 #                             players.remove(player)
 #                     else:
 #                         player["lastRequest"] = 0
-                        
+
 #             except Exception:
 #                 None
 
@@ -266,9 +266,15 @@ class Box:
 
 # Create boxes based on the level configuration
 boxes = [
-    Box(j * MAP_WALL_GEOMETRY, i * MAP_WALL_GEOMETRY, MAP_WALL_GEOMETRY, MAP_WALL_GEOMETRY)
+    Box(
+        j * MAP_WALL_GEOMETRY,
+        i * MAP_WALL_GEOMETRY,
+        MAP_WALL_GEOMETRY,
+        MAP_WALL_GEOMETRY,
+    )
     for i, row in enumerate(level)
-    for j, element in enumerate(row) if element == 1
+    for j, element in enumerate(row)
+    if element == 1
 ]
 
 
@@ -297,7 +303,7 @@ def handle_collision(player1, player2):
     overlap = 2 * RADII - dist
     dir_x = player2["x"] - player1["x"]
     dir_y = player2["y"] - player1["y"]
-    length = math.sqrt(dir_x ** 2 + dir_y ** 2)
+    length = math.sqrt(dir_x**2 + dir_y**2)
     if length != 0:
         dir_x /= length
         dir_y /= length
@@ -330,9 +336,9 @@ def handle_map_collision(player):
         closestY = clamp(player["y"], box.y, box.y + box.height)
         distanceX = player["x"] - closestX
         distanceY = player["y"] - closestY
-        distanceSquared = distanceX ** 2 + distanceY ** 2
+        distanceSquared = distanceX**2 + distanceY**2
 
-        if distanceSquared <= RADII ** 2:
+        if distanceSquared <= RADII**2:
             dist = math.sqrt(distanceSquared)
             if dist != 0:
                 displacementX = distanceX / dist
@@ -367,18 +373,15 @@ async def handler(websocket, path):
             # Handle player state
             player_uuid = data.get("uuid")
             if player_uuid:
-                # Update the lastRequest counter and remove inactive players
                 for player in players[:]:
                     if player["uuid"] != player_uuid:
                         player["lastRequest"] += 1
-                        if player["lastRequest"] > 500:
+                        if player["lastRequest"] > 9999:
                             players.remove(player)
                     else:
                         player["lastRequest"] = 0
 
-            if data["type"] == "__ping__":
-                await websocket.send(json.dumps({"type": "__pong__"}))
-            elif data["type"] == "move":
+            if data["type"] == "move":
                 player_exists = False
                 for player in players:
                     if player["uuid"] == player_uuid:
@@ -388,16 +391,9 @@ async def handler(websocket, path):
                         break
 
                 if not player_exists:
-                    players.append({
-                        "uuid": player_uuid,
-                        "x": random.randint(10, 1000),
-                        "y": random.randint(10, 1000),
-                        "xvel": data["xvel"],
-                        "yvel": data["yvel"],
-                        "lastRequest": 0
-                    })
-
+                    players.append({"uuid": player_uuid,"x": random.randint(10, 1000),"y": random.randint(10, 1000),"xvel": data["xvel"],"yvel": data["yvel"],"lastRequest": 0,})
                 await websocket.send(json.dumps({"status": "Success"}))
+                
             elif data["type"] == "data":
                 if player_uuid:
                     copy_of_players = copy.deepcopy(players)
@@ -408,20 +404,22 @@ async def handler(websocket, path):
                         if player["uuid"] != player_uuid:
                             player["uuid"] = 0
 
-                    await websocket.send(json.dumps(
-                        {"type": "playerData", "players": copy_of_players} if copy_of_players else
-                        {"status": "No players available"}))
+                    await websocket.send(json.dumps({"type": "playerData", "players": copy_of_players} if copy_of_players else {"status": "No players available"}))
                 else:
                     await websocket.send(json.dumps({"status": "Invalid request"}))
+                    
             elif data["type"] == "disconnect":
                 players[:] = [player for player in players if player["uuid"] != player_uuid]
+                
             elif data["type"] == "xy":
                 for player in players:
                     if player["uuid"] == player_uuid:
                         player["x"] = data["x"]
                         player["y"] = data["y"]
+                        
             elif data["type"] == "getLevel":
                 await websocket.send(json.dumps({"type": "levelData", "level": level}))
+                
     except Exception as e:
         print(f"Error: {e}")
 

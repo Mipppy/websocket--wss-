@@ -1,4 +1,4 @@
-import { playerData, sendMoveData } from "./gamesocket.js";
+import { playerData, sendMoveData, shouldUpdateWithPredicted } from "./gamesocket.js";
 import { currentPlayer, renderBoxes, renderPlayers } from "./render.js";
 import { boxes } from "./mapping.js"
 export var x = Math.floor(Math.random() * 1000);
@@ -64,8 +64,15 @@ export function createEngineWindowEvents() {
 export function move() {
     velocityX *= friction;
     velocityY *= friction;
-    sendMoveData(velocityX, velocityY)
+
+    if (Math.abs(velocityX) < 0.0001) velocityX = 0;
+    if (Math.abs(velocityY) < 0.0001) velocityY = 0;
+
+    if (velocityX !== 0 || velocityY !== 0) {
+        sendMoveData(velocityX, velocityY);
+    }
 }
+
 
 function checkIfMoved() {
     try {
@@ -81,17 +88,20 @@ function checkIfMoved() {
 }
 
 var loop = 0;
-let lastFrameTime = 0;
-const frameRate = 60; 
+let lastFrameTime = performance.now();
+const frameRate = 60;
 const frameInterval = 1000 / frameRate;
 
-export function gameLoop(currentTime) {
-    requestAnimationFrame(gameLoop);
-
+export function gameLoop() {
+    loop++;
+    const currentTime = performance.now();
     const elapsedTime = currentTime - lastFrameTime;
+    
+    updatePredictedPosition();
+
+    reconcilePosition();
 
     if (!checkIfMoved() || loop < 60) {
-        loop++;
         try {
             renderPlayers(playerData);
         } catch (error) {}
@@ -106,13 +116,35 @@ export function gameLoop(currentTime) {
 
     if (elapsedTime >= frameInterval) {
         // This limits the movement speed to 60 times a second, so people with higher hertz monitors don't move faster, but letting them render faster
-        lastFrameTime = currentTime - (elapsedTime % frameInterval);
+        lastFrameTime = performance.now() - (elapsedTime % frameInterval);
         handleKeypresses();
         move();
     }
+    requestAnimationFrame(gameLoop);
 }
 
 
+export let predictedX = 0;
+export let predictedY = 0;
+
+function updatePredictedPosition() {
+
+    predictedX *= friction;
+    predictedY *= friction;
+    predictedX += velocityX
+    predictedY += velocityY
+    console.log(predictedX + ", " + predictedY)
+}
+
+function reconcilePosition() {
+    try {
+        if (!shouldUpdateWithPredicted) {
+            predictedX = currentPlayer.x;
+            predictedY = currentPlayer.y;
+        }
+    } catch(e) {}
+
+}
 
 
 export function loadFPS() {
@@ -124,6 +156,5 @@ export function loadFPS() {
         document.body.appendChild(stats.dom);
         pingPanel = stats.addPanel( new Stats.Panel( 'PING', '#f08', '#201' ) );
         stats.showPanel( 0 )
-        
     };
 }

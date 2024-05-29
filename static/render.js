@@ -1,19 +1,20 @@
-import { playerUUID } from "./gamesocket.js";
+import { predictedX, predictedY } from "./engine.js";
+import { playerUUID, shouldUpdateWithPredicted } from "./gamesocket.js";
 import { images } from "./imagehandler.js";
 
-export var canvas;
-export var context;
-export var currentPlayer;
-export var radii = 40;
+export let canvas;
+export let context;
+export let currentPlayer;
+export const radii = 40;
 
 export function createRenderWindowEvents() {
-    window.onresize = function () {
+    window.onresize = () => {
         canvas.width = document.body.clientWidth;
         canvas.height = document.body.clientHeight;
     }
 }
 
-export function initCanvas(document) {
+export function initCanvas() {
     canvas = document.getElementById("gamewindow");
     context = canvas.getContext("2d");
     canvas.width = document.body.clientWidth;
@@ -22,26 +23,24 @@ export function initCanvas(document) {
 
 export function renderPlayers(players) {
     context.clearRect(0, 0, canvas.width, canvas.height);
-    let currentPlayer1 = players.find(player => player.uuid === playerUUID);
-    currentPlayer = currentPlayer1;
-    if (!currentPlayer1) return;
-
+    currentPlayer = players.find(player => player.uuid === playerUUID);
+    if (!currentPlayer) return;
+    context.fillStyle = 'rgba(255, 0, 0, 0.5)';
     const playerImage = images.get("player");
     const halfCanvasWidth = canvas.width / 2;
     const halfCanvasHeight = canvas.height / 2;
     const adjustedRadii = radii * 2.5;
     const strokeRadii = radii;
-
     players.forEach(player => {
-        let x, y;
+        
+        let [x, y] = shouldUpdateWithPredicted ? getPredictedRelative(player.x, player.y) : getRelative(player.x, player.y);
 
         if (player.uuid === playerUUID) {
             x = halfCanvasWidth;
             y = halfCanvasHeight;
         } else {
-            [x, y] = getRelative(player.x, player.y);
-            x = Math.round(x) + radii;
-            y = Math.round(y) + radii;
+            x += radii;
+            y += radii;
         }
 
         context.save();
@@ -52,23 +51,33 @@ export function renderPlayers(players) {
 
         context.beginPath();
         context.arc(x, y, strokeRadii, 0, Math.PI * 2, true);
-        context.stroke();
+        context.fill();
         context.restore();
     });
 }
 
-
 export function renderBoxes(boxes) {
-    for (var box of boxes) {
+    boxes.forEach(box => {
+        const [relativeX, relativeY] = getRelative(box.x, box.y);
         context.beginPath(); 
-        context.drawImage(images.get("wall"), getRelative(box.x, box.y)[0] + radii, getRelative(box.x, box.y)[1] + radii, box.width, box.height);
+        context.drawImage(images.get("wall"), relativeX + radii, relativeY + radii, box.width, box.height);
         context.stroke(); 
-    }
+    });
 }
 
 export function getRelative(x, y) {
-    if (!currentPlayer) return [0,0];
-    let relativeX = (x - currentPlayer.x + canvas.width / 2) - radii;
-    let relativeY = (y - currentPlayer.y + canvas.height / 2) - radii;
+    if (!currentPlayer) return [0, 0];
+    const halfCanvasWidth = canvas.width / 2;
+    const halfCanvasHeight = canvas.height / 2;
+    const relativeX = (x - currentPlayer.x + halfCanvasWidth) - radii;
+    const relativeY = (y - currentPlayer.y + halfCanvasHeight) - radii;
+    return [relativeX, relativeY];
+}
+export function getPredictedRelative(x, y) {
+    if (!currentPlayer) return [0, 0];
+    const halfCanvasWidth = canvas.width / 2;
+    const halfCanvasHeight = canvas.height / 2;
+    const relativeX = (x - predictedX + halfCanvasWidth) - radii;
+    const relativeY = (y - predictedY + halfCanvasHeight) - radii;
     return [relativeX, relativeY];
 }
