@@ -32,6 +32,7 @@ export function renderPlayers(players) {
     const adjustedRadii = radii * 2.5;
     const strokeRadii = radii;
     players.forEach(player => {
+        console.log("Players: " + shouldUpdateWithPredicted)
 
         let [x, y] = shouldUpdateWithPredicted ? getPredictedRelative(player.x, player.y) : getRelative(player.x, player.y);
 
@@ -59,6 +60,7 @@ export function renderPlayers(players) {
 export function renderBoxes(boxes) {
     context.fillStyle = 'rgba(0, 0, 255, 0.5)';
     boxes.forEach(box => {
+        console.log("Boxes: " + shouldUpdateWithPredicted)
         const [relativeX, relativeY] = shouldUpdateWithPredicted ? getPredictedRelative(box.x, box.y) : getRelative(box.x, box.y);
         context.beginPath();
         context.drawImage(images.get("wall"), relativeX + radii, relativeY + radii, box.width, box.height);

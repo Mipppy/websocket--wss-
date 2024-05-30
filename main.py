@@ -392,7 +392,6 @@ async def handler(websocket, path):
 
                 if not player_exists:
                     players.append({"uuid": player_uuid,"x": random.randint(10, 1000),"y": random.randint(10, 1000),"xvel": data["xvel"],"yvel": data["yvel"],"lastRequest": 0,})
-                await websocket.send(json.dumps({"status": "Success"}))
                 
             elif data["type"] == "data":
                 if player_uuid:

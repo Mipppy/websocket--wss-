@@ -104,14 +104,8 @@ export function pollPlayerCount() {
 
 setInterval(pollPlayerCount, 1000)
 
-export async function changeWebSocket(url) {
-
-    return await new Promise((resolve, reject) => {
-        try {
+export function changeWebSocket(url) {
+    try {
             initWebSocket(url)
-        } catch (e) {
-            reject(e)
-        }
-        resolve("Success");
-    })
+    } catch (e) {}
 }

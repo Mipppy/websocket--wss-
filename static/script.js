@@ -3,7 +3,6 @@ import { initCanvas } from "./render.js";
 import { createWindowEvents } from "./windowevents.js";
 import { gameLoop, loadFPS, velocityX, velocityY } from "./engine.js"
 import { loadLevel } from "./mapping.js";
-initWebSocket("https://wwww-3ods.onrender.com");
 
 export function startGame() {
     loadLevel();

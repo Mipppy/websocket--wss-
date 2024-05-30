@@ -1,5 +1,8 @@
 import { changeWebSocket, initWebSocket } from "./gamesocket.js";
 import { startGame } from "./script.js";
+initWebSocket("https://wwww-3ods.onrender.com");
+
+
 document.getElementById("joinGameButton").onclick = (event) => {
     cleanupGUI()
     startGame()
@@ -20,10 +23,6 @@ export function handleConnectionError() {
 }
 document.getElementById("server").onchange = (event) => {
     try {
-        var promise = changeWebSocket(event.target.options[event.target.selectedIndex].value)
-        alert("Switching servers")
-        promise.then(() => {
-            alert("Switched")
-        })
+        changeWebSocket(event.target.options[event.target.selectedIndex].value)
     } catch (e) { }
 }
