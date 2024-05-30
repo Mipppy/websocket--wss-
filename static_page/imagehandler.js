@@ -25,6 +25,6 @@ function ImageCollection(list) {
 }
 
 export var images = new ImageCollection([
-    { name: "player", url: "/static/images/screenshot.png"},
-    { name: "wall", url: "/static/images/screenshot.png"},
+    { name: "player", url: "images/screenshot.png"},
+    { name: "wall", url: "images/screenshot.png"},
 ]);
