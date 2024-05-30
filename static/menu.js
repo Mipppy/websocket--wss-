@@ -20,7 +20,6 @@ export function handleConnectionError() {
 }
 document.getElementById("server").onchange = (event) => {
     try {
-        console.log(event.target)
         var promise = changeWebSocket(event.target.options[event.target.selectedIndex].value)
         alert("Switching servers")
         promise.then(() => {
