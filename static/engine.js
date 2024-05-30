@@ -66,7 +66,7 @@ export function move() {
     velocityY *= friction;
 
     if (velocityX !== 0 || velocityY !== 0) {
-        sendMoveData(velocityX, velocityY);
+        sendMoveData(Math.round((velocityX + Number.EPSILON) * 1000) / 1000, Math.round((velocityY + Number.EPSILON) * 1000) / 1000);
     }
 }
 
