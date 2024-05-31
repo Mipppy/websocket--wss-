@@ -105,15 +105,21 @@ export function gameLoop() {
     if (!checkIfMoved() || loop < 60) {
         try {
             renderPlayers(playerData);
-        } catch (error) { console.log(error)}
+        } catch (error) {}
         try {
             renderBoxes(boxes);
         } catch (error) { console.log(error)}
     }
 
     try {
-        stats.update(ping1, ( ping1 < 75 ? 75 : 200));
-    } catch (error) { }
+        console.log(stats)
+        console.log(pingPanel)
+        console.log(ping1)
+        if (stats && pingPanel && ping1) {
+            pingPanel.update(ping1, ping1 < 75 ? 75 : 200);
+
+        }
+    } catch (error) {console.log(error)}
 
     if (elapsedTime >= frameInterval) {
         // This limits the movement speed to 60 times a second, so people with higher hertz monitors don't move faster, but letting them render faster
@@ -151,6 +157,7 @@ export function loadFPS() {
     script.src = 'https://mrdoob.github.io/stats.js/build/stats.min.js';
     document.head.appendChild(script);
     script.onload = () => {
+        console.log("Loaded stats.js");
         stats = new Stats();
         document.body.appendChild(stats.dom);
         pingPanel = stats.addPanel(new Stats.Panel('PING', '#f08', '#201'));

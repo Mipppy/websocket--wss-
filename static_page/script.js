@@ -4,9 +4,9 @@ import { gameLoop, loadFPS } from "./engine.js"
 import { sendMoveData } from "./worker_handler.js";
 
 export function startGame() {
+    loadFPS()
     sendMoveData(0,0)
     initCanvas();
     createWindowEvents();
-    loadFPS()
     requestAnimationFrame(gameLoop);
 }
