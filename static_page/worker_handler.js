@@ -11,7 +11,7 @@ var actions = {
 }
 
 export function openWebWorker(url) {
-    worker = new Worker("/static/socket_worker.js", {type: "module"})
+    worker = new Worker("socket_worker.js", {type: "module"})
 
     worker.onmessage = (event) => {
         const data = event.data;
