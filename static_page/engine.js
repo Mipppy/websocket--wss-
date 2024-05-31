@@ -1,6 +1,6 @@
 import { currentPlayer, renderBoxes, renderPlayers } from "./render.js";
 import { boxes } from "./mapping.js"
-import { playerData, sendMoveData } from "./worker_handler.js";
+import { playerData, sendMoveData, ping1 } from "./worker_handler.js";
 export var x = Math.floor(Math.random() * 1000);
 export var y = Math.floor(Math.random() * 1000);
 export var speed = 1.15;
@@ -112,7 +112,7 @@ export function gameLoop() {
     }
 
     try {
-        stats.update();
+        stats.update(ping1, ( ping1 < 75 ? 75 : 200));
     } catch (error) { }
 
     if (elapsedTime >= frameInterval) {

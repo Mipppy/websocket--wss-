@@ -28,8 +28,8 @@ function initWebSocket(url) {
 
         socket.onopen = () => {
             console.log("Opened websocket");
-            getLevelData().then((level) => { postMessage({ type: "level", level: level }); });
             getPlayerData();
+            getLevelData().then((level) => { postMessage({ type: "level", level: level }); });
         };
 
         socket.onmessage = handleMessages;
@@ -78,12 +78,13 @@ async function getLevelData() {
 
 function handleMessages(event) {
     const parsed = JSON.parse(event.data);
-    
+    getPlayerData()
+
     if (parsed.type === "playerData") {
         playerData = parsed.players;
         ping1 = Date.now() - pingStartTime;
-        getPlayerData()
         postMessage({ type: 'data', data: parsed.players, ping: ping1 });
+
     } else if (parsed.type === "playerCount") {
         postMessage({ type: "playerCount", count: parsed.count });
     }
