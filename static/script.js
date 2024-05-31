@@ -1,22 +1,12 @@
-import { getPlayerData, initWebSocket, sendMoveData } from "./gamesocket.js"
 import { initCanvas } from "./render.js";
 import { createWindowEvents } from "./windowevents.js";
-import { gameLoop, loadFPS, velocityX, velocityY } from "./engine.js"
-import { loadLevel } from "./mapping.js";
+import { gameLoop, loadFPS } from "./engine.js"
+import { sendMoveData } from "./worker_handler.js";
 
 export function startGame() {
-    loadLevel();
-    sendMoveData(velocityX, velocityY);
-    getPlayerData();
+    sendMoveData(0,0)
     initCanvas();
     createWindowEvents();
     loadFPS()
     requestAnimationFrame(gameLoop);
-}
-
-
-export function handlePlayerCount(count) {
-    try {
-        document.getElementById("playerCount").innerText = count
-    } catch (e) { }
 }

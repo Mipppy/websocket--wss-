@@ -1,6 +1,6 @@
-import { playerData, sendMoveData, shouldUpdateWithPredicted } from "./gamesocket.js";
 import { currentPlayer, renderBoxes, renderPlayers } from "./render.js";
 import { boxes } from "./mapping.js"
+import { playerData, sendMoveData } from "./worker_handler.js";
 export var x = Math.floor(Math.random() * 1000);
 export var y = Math.floor(Math.random() * 1000);
 export var speed = 1.15;
@@ -66,6 +66,7 @@ export function move() {
     velocityY *= friction;
 
     if (velocityX !== 0 || velocityY !== 0) {
+
         sendMoveData(Math.round((velocityX + Number.EPSILON) * 1000) / 1000, Math.round((velocityY + Number.EPSILON) * 1000) / 1000);
     }
 }
@@ -104,10 +105,10 @@ export function gameLoop() {
     if (!checkIfMoved() || loop < 60) {
         try {
             renderPlayers(playerData);
-        } catch (error) { }
+        } catch (error) { console.log(error)}
         try {
             renderBoxes(boxes);
-        } catch (error) { }
+        } catch (error) { console.log(error)}
     }
 
     try {

@@ -1,6 +1,6 @@
 import { predictedX, predictedY } from "./engine.js";
-import { playerUUID, shouldUpdateWithPredicted } from "./gamesocket.js";
 import { images } from "./imagehandler.js";
+import { playerUUID } from "./worker_handler.js";
 
 export let canvas;
 export let context;
@@ -33,7 +33,7 @@ export function renderPlayers(players) {
     const strokeRadii = radii;
     players.forEach(player => {
 
-        let [x, y] = shouldUpdateWithPredicted ? getPredictedRelative(player.x, player.y) : getRelative(player.x, player.y);
+        let [x, y] = getRelative(player.x, player.y);
 
         if (player.uuid === playerUUID) {
             x = halfCanvasWidth;
@@ -59,7 +59,7 @@ export function renderPlayers(players) {
 export function renderBoxes(boxes) {
     context.fillStyle = 'rgba(0, 0, 255, 0.5)';
     boxes.forEach(box => {
-        const [relativeX, relativeY] = shouldUpdateWithPredicted ? getPredictedRelative(box.x, box.y) : getRelative(box.x, box.y);
+        const [relativeX, relativeY] = getRelative(box.x, box.y);
         context.beginPath();
         context.drawImage(images.get("wall"), relativeX + radii, relativeY + radii, box.width, box.height);
         context.rect(relativeX + radii, relativeY + radii, box.width, box.height)

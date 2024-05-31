@@ -371,15 +371,18 @@ async def handler(websocket, path):
             collision()
 
             # Handle player state
-            player_uuid = data.get("uuid")
-            if player_uuid:
-                for player in players[:]:
-                    if player["uuid"] != player_uuid:
-                        player["lastRequest"] += 1
-                        if player["lastRequest"] > 500:
-                            players.remove(player)
-                    else:
-                        player["lastRequest"] = 0
+            try:
+                player_uuid = data.get("uuid")
+                if player_uuid:
+                    for player in players[:]:
+                        if player["uuid"] != player_uuid:
+                            player["lastRequest"] += 1
+                            if player["lastRequest"] > 500:
+                                players.remove(player)
+                        else:
+                            player["lastRequest"] = 0
+            except Exception:
+                None
 
             if data["type"] == "move":
                 player_exists = False
