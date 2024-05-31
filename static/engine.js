@@ -112,7 +112,7 @@ export function gameLoop() {
     }
 
     try {
-        stats.update();
+        stats.update(ping1, ( ping1 < 75 ? 75 : 200));
     } catch (error) { }
 
     if (elapsedTime >= frameInterval) {
