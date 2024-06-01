@@ -94,7 +94,7 @@ export function gameLoop() {
     loop++;
     const currentTime = performance.now();
     const elapsedTime = currentTime - lastFrameTime;
-
+    try {stats.begin()} catch (e) {}
     if (Math.abs(velocityX) < 0.0001) velocityX = 0;
     if (Math.abs(velocityY) < 0.0001) velocityY = 0;
 
@@ -112,14 +112,9 @@ export function gameLoop() {
     }
 
     try {
-        console.log(stats)
-        console.log(pingPanel)
         console.log(ping1)
-        if (stats && pingPanel && ping1) {
-            pingPanel.update(ping1, ping1 < 75 ? 75 : 200);
-
-        }
-    } catch (error) {console.log(error)}
+            pingPanel.update(ping1, ping1 < 25 ? 25 : ( ping1 < 75 ? 75 : 200) );
+    } catch (error) {}
 
     if (elapsedTime >= frameInterval) {
         // This limits the movement speed to 60 times a second, so people with higher hertz monitors don't move faster, but letting them render faster
@@ -127,6 +122,8 @@ export function gameLoop() {
         handleKeypresses();
         move();
     }
+    try {stats.end()} catch (e) {}
+
     requestAnimationFrame(gameLoop);
 }
 

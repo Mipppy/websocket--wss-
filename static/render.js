@@ -71,15 +71,15 @@ export function getRelative(x, y) {
     if (!currentPlayer) return [0, 0];
     const halfCanvasWidth = canvas.width / 2;
     const halfCanvasHeight = canvas.height / 2;
-    const relativeX = (x - currentPlayer.x + halfCanvasWidth) - radii;
-    const relativeY = (y - currentPlayer.y + halfCanvasHeight) - radii;
+    const relativeX = Math.round((x - currentPlayer.x + halfCanvasWidth) - radii);
+    const relativeY = Math.round((y - currentPlayer.y + halfCanvasHeight) - radii);
     return [relativeX, relativeY];
 }
 export function getPredictedRelative(x, y) {
     if (!currentPlayer) return [0, 0];
     const halfCanvasWidth = canvas.width / 2;
     const halfCanvasHeight = canvas.height / 2;
-    const relativeX = (x - predictedX + halfCanvasWidth) - radii;
-    const relativeY = (y - predictedY + halfCanvasHeight) - radii;
+    const relativeX = Math.round((x - predictedX + halfCanvasWidth) - radii);
+    const relativeY = Math.round((y - predictedY + halfCanvasHeight) - radii);
     return [relativeX, relativeY];
 }

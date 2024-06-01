@@ -1,8 +1,10 @@
+import { loadFPS } from "./engine.js";
 import { startGame } from "./script.js";
 import { openWebWorker, switchServer } from "./worker_handler.js";
 // initWebSocket("https://wwww-3ods.onrender.com");
 var server = document.getElementById("server")
-openWebWorker(server.options[server.selectedIndex].value)
+// openWebWorker(server.options[server.selectedIndex].value)
+openWebWorker("http://localhost:8000")
 
 document.getElementById("joinGameButton").onclick = (event) => {
     cleanupGUI()

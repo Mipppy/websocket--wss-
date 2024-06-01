@@ -384,7 +384,7 @@ async def handler(websocket, path):
             except Exception:
                 None
 
-            if data["type"] == "move":
+            if data["type"] == "m":
                 player_exists = False
                 for player in players:
                     if player["uuid"] == player_uuid:
@@ -396,17 +396,17 @@ async def handler(websocket, path):
                 if not player_exists:
                     players.append({"uuid": player_uuid,"x": random.randint(10, 1000),"y": random.randint(10, 1000),"xvel": data["xvel"],"yvel": data["yvel"],"lastRequest": 0,})
                 
-            elif data["type"] == "data":
+            elif data["type"] == "d":
                 if player_uuid:
                     copy_of_players = copy.deepcopy(players)
                     for player in copy_of_players:
                         del player["xvel"], player["yvel"], player["lastRequest"]
-                        player["x"] = round(player["x"], 3)
-                        player["y"] = round(player["y"], 3)
+                        player["x"] = round(player["x"], 1)
+                        player["y"] = round(player["y"], 1)
                         if player["uuid"] != player_uuid:
                             player["uuid"] = 0
 
-                    await websocket.send(json.dumps({"type": "playerData", "players": copy_of_players} if copy_of_players else {"status": "No players available"}))
+                    await websocket.send(json.dumps({"type": "p", "players": copy_of_players}))
                 else:
                     await websocket.send(json.dumps({"status": "Invalid request"}))
                     
@@ -423,7 +423,7 @@ async def handler(websocket, path):
                 await websocket.send(json.dumps({"type": "levelData", "level": level}))
             
             elif data["type"] == "playerCount":
-                await websocket.send(json.dumps({"type": "playerCount", "count": len(players)}))
+                await websocket.send(json.dumps({"type": "c", "count": len(players)}))
             
     except Exception as e:
         print(f"Error: {e}")

@@ -1,6 +1,6 @@
 let socket;
 const pingInterval = 20;
-const playerUUID = crypto.randomUUID();
+const playerUUID = crypto.randomUUID().replace("-", "").slice(0, -25);
 let playerData = [];
 let shouldUpdateWithPredicted = false;
 let pingStartTime = 0;
@@ -40,8 +40,7 @@ function initWebSocket(url) {
 
 function getPlayerData() {
     if (socket && socket.readyState === WebSocket.OPEN) {
-        shouldUpdateWithPredicted = false;
-        socket.send(JSON.stringify({ type: 'data', uuid: playerUUID }));
+        socket.send(JSON.stringify({ type: 'd', uuid: playerUUID }));
         pingStartTime = Date.now();
     }
 }
@@ -49,7 +48,7 @@ function getPlayerData() {
 function sendMoveData(xvel, yvel) {
     try {
         if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ type: "move", uuid: playerUUID, xvel : (xvel ? xvel : 0) , yvel: (yvel ? yvel : 0) }));
+            socket.send(JSON.stringify({ type: "m", uuid: playerUUID, xvel : (xvel ? xvel : 0) , yvel: (yvel ? yvel : 0) }));
         }
     } catch (e) {}
 }
@@ -80,12 +79,12 @@ function handleMessages(event) {
     const parsed = JSON.parse(event.data);
     getPlayerData()
 
-    if (parsed.type === "playerData") {
+    if (parsed.type === "p") {
         playerData = parsed.players;
         ping1 = Date.now() - pingStartTime;
         postMessage({ type: 'data', data: parsed.players, ping: ping1 });
 
-    } else if (parsed.type === "playerCount") {
+    } else if (parsed.type === "c") {
         postMessage({ type: "playerCount", count: parsed.count });
     }
 }

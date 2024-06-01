@@ -4,7 +4,7 @@ export var worker;
 export var playerData, ping1, playerUUID;
 
 var actions = {
-    "data" : (e) => {playerData = e.data; ping1 = e.ping; console.log(e.ping)},
+    "data" : (e) => {playerData = e.data; ping1 = e.ping; console.log(ping1)},
     "level" : (e) => {loadLevel(e.level); },
     "uuid" : (e) => {playerUUID = e.uuid},
     "playerCount" : (e) => {handlePlayerCount(e.count);}
