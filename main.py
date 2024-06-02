@@ -406,7 +406,7 @@ async def handler(websocket, path):
                         if player["uuid"] != player_uuid:
                             player["uuid"] = 0
 
-                    await websocket.send(json.dumps({"type": "p", "players": copy_of_players}))
+                    await websocket.send(json.dumps({"type": "p", "p": copy_of_players}))
                 else:
                     await websocket.send(json.dumps({"status": "Invalid request"}))
                     

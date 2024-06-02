@@ -94,27 +94,24 @@ export function gameLoop() {
     loop++;
     const currentTime = performance.now();
     const elapsedTime = currentTime - lastFrameTime;
-    try {stats.begin()} catch (e) {}
+    try { stats.begin() } catch (e) { }
     if (Math.abs(velocityX) < 0.0001) velocityX = 0;
     if (Math.abs(velocityY) < 0.0001) velocityY = 0;
 
     updatePredictedPosition();
 
-    reconcilePosition();
-
     if (!checkIfMoved() || loop < 60) {
         try {
             renderPlayers(playerData);
-        } catch (error) {}
+        } catch (error) { }
         try {
             renderBoxes(boxes);
-        } catch (error) { console.log(error)}
+        } catch (error) { console.log(error) }
     }
 
     try {
-        console.log(ping1)
-            pingPanel.update(ping1, ping1 < 25 ? 25 : ( ping1 < 75 ? 75 : 200) );
-    } catch (error) {}
+        pingPanel.update(ping1, ping1 < 25 ? 25 : (ping1 < 75 ? 75 : 200));
+    } catch (error) { }
 
     if (elapsedTime >= frameInterval) {
         // This limits the movement speed to 60 times a second, so people with higher hertz monitors don't move faster, but letting them render faster
@@ -122,7 +119,7 @@ export function gameLoop() {
         handleKeypresses();
         move();
     }
-    try {stats.end()} catch (e) {}
+    try { stats.end() } catch (e) { }
 
     requestAnimationFrame(gameLoop);
 }
@@ -132,11 +129,11 @@ export let predictedX = 0;
 export let predictedY = 0;
 
 function updatePredictedPosition() {
-    velocityX *= friction;
-    velocityY *= friction;
-
     predictedX += velocityX;
     predictedY += velocityY;
+
+    velocityX *= friction;
+    velocityY *= friction;
 }
 
 function reconcilePosition() {

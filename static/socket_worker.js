@@ -77,16 +77,16 @@ async function getLevelData() {
 
 function handleMessages(event) {
     const parsed = JSON.parse(event.data);
-    getPlayerData()
 
     if (parsed.type === "p") {
-        playerData = parsed.players;
         ping1 = Date.now() - pingStartTime;
-        postMessage({ type: 'data', data: parsed.players, ping: ping1 });
+        postMessage({ type: 'data', data: parsed.p, ping: ping1 });
+        getPlayerData()
 
     } else if (parsed.type === "c") {
         postMessage({ type: "playerCount", count: parsed.count });
     }
+
 }
 
 setInterval(() => {
