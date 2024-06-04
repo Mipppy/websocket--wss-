@@ -67,7 +67,7 @@ export function move() {
 
     if (velocityX !== 0 || velocityY !== 0) {
 
-        sendMoveData(Math.round((velocityX + Number.EPSILON) * 1000) / 1000, Math.round((velocityY + Number.EPSILON) * 1000) / 1000);
+        sendMoveData(keypresses);
     }
 }
 
@@ -99,7 +99,7 @@ export function gameLoop() {
     if (Math.abs(velocityY) < 0.0001) velocityY = 0;
 
     updatePredictedPosition();
-
+reconcilePosition()
     if (!checkIfMoved() || loop < 60) {
         try {
             renderPlayers(playerData);
@@ -109,9 +109,7 @@ export function gameLoop() {
         } catch (error) { console.log(error) }
     }
 
-    try {
-        pingPanel.update(ping1, ping1 < 25 ? 25 : (ping1 < 75 ? 75 : 200));
-    } catch (error) { }
+    try {pingPanel.update(ping1, ping1 < 25 ? 25 : (ping1 < 75 ? 75 : 200)); } catch (error) { }
 
     if (elapsedTime >= frameInterval) {
         // This limits the movement speed to 60 times a second, so people with higher hertz monitors don't move faster, but letting them render faster

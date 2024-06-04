@@ -1,3 +1,4 @@
+
 let socket;
 const pingInterval = 20;
 const playerUUID = crypto.randomUUID().replace("-", "").slice(0, -25);
@@ -45,10 +46,11 @@ function getPlayerData() {
     }
 }
 
-function sendMoveData(xvel, yvel) {
+function sendMoveData() {
     try {
         if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ type: "m", uuid: playerUUID, xvel : (xvel ? xvel : 0) , yvel: (yvel ? yvel : 0) }));
+                socket.send(JSON.stringify({ type: "m", uuid: playerUUID, "0" : keypresses.w ? keypresses.w : false, "1" : keypresses.a ? keypresses.a : false, "2": keypresses.s ? keypresses.s : false, "3":keypresses.d ? keypresses.d : false }));
+            
         }
     } catch (e) {}
 }
@@ -102,7 +104,7 @@ self.addEventListener('message', (event) => {
         console.log("Switching to " + data.url);
         initWebSocket(data.url);
     } else if (data.type === "m") {
-        sendMoveData(data.x, data.y);
+        sendMoveData(data.f);
     } else if (data.type === "d") {
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.onclose = () => { };

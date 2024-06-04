@@ -242,6 +242,7 @@ import json
 import math
 import random
 import copy
+import threading
 
 level = [
     [0, 0, 0, 0, 0, 1, 0, 0, 0],
@@ -254,7 +255,7 @@ level = [
 players = []
 RADII = 40
 MAP_WALL_GEOMETRY = RADII * 2
-
+SPEED = 1.0
 
 class Box:
     def __init__(self, x, y, width, height):
@@ -352,6 +353,14 @@ def collision():
     for i, player in enumerate(players):
         if player["x"] is None or player["y"] is None:
             continue
+        if player["w"]:
+            player["yvel"] -= SPEED
+        if player["s"]:
+            player["yvel"] += SPEED
+        if player["a"]:
+            player["xvel"] -= SPEED
+        if player["d"]:
+            player["xvel"] += SPEED
         player["xvel"] *= 0.9
         player["yvel"] *= 0.9
         player["x"] += player["xvel"]
@@ -368,7 +377,6 @@ async def handler(websocket, path):
         async for message in websocket:
             data = json.loads(message)
 
-            collision()
 
             # Handle player state
             try:
@@ -388,19 +396,21 @@ async def handler(websocket, path):
                 player_exists = False
                 for player in players:
                     if player["uuid"] == player_uuid:
-                        player["xvel"] = data["xvel"]
-                        player["yvel"] = data["yvel"]
+                        player["w"] = data["0"]
+                        player["a"] = data["1"]
+                        player["s"] = data["2"]
+                        player["d"] = data["3"]
                         player_exists = True
                         break
 
                 if not player_exists:
-                    players.append({"uuid": player_uuid,"x": random.randint(10, 1000),"y": random.randint(10, 1000),"xvel": data["xvel"],"yvel": data["yvel"],"lastRequest": 0,})
+                    players.append({"uuid": player_uuid,"x": random.randint(10, 1000),"y": random.randint(10, 1000),"lastRequest": 0, "w" : False, "a" : False, "s": False, "d": False, "xvel" : 0, "yvel": 0})
                 
             elif data["type"] == "d":
                 if player_uuid:
                     copy_of_players = copy.deepcopy(players)
                     for player in copy_of_players:
-                        del player["xvel"], player["yvel"], player["lastRequest"]
+                        del player["lastRequest"], player["w"], player["a"], player["s"], player["d"], player["xvel"], player["yvel"]
                         player["x"] = round(player["x"], 1)
                         player["y"] = round(player["y"], 1)
                         if player["uuid"] != player_uuid:
@@ -427,6 +437,28 @@ async def handler(websocket, path):
             
     except Exception as e:
         print(f"Error: {e}")
+
+
+def set_interval(func, sec):
+    def func_wrapper():
+        set_interval(func, sec)
+        func()
+    t = threading.Timer(sec, func_wrapper)
+    t.start()
+    return t
+
+
+def updates():
+    collision()
+    for player in players:
+        try:
+            print(player["0"])
+            print(player["1"])
+            print(player["2"])
+            print(player["3"]) 
+        except Exception:
+            None
+set_interval(updates, 1.0/60.0)
 
 
 start_server = websockets.serve(handler, "0.0.0.0", 8000)

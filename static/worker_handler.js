@@ -25,8 +25,8 @@ export function switchServer(url) {
     worker.postMessage({type: "nS", url: url})
 }
 
-export function sendMoveData(xvel, yvel) {
-    worker.postMessage({type: "m", x: xvel, y: yvel})
+export function sendMoveData(keypresses) {
+    worker.postMessage({type: "m", f : {keypresses}})
 }
 export function createWorkerWindowEvents() {
     window.onbeforeunload = function () {
