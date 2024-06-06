@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "base-ex": "^0.8.1",
+    "base256-encoding": "^2.0.2",
+    "browserify": "^17.0.0"
+  }
+}

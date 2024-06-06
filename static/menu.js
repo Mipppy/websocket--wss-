@@ -1,8 +1,6 @@
-import { loadFPS } from "./engine.js";
 import { startGame } from "./script.js";
 import { openWebWorker, switchServer } from "./worker_handler.js";
 var server = document.getElementById("server")
-// openWebWorker(server.options[server.selectedIndex].value)
 openWebWorker("http://localhost:8000")
 
 document.getElementById("joinGameButton").onclick = (event) => {
@@ -26,7 +24,7 @@ server.onchange = (event) => {
 
 export function handlePlayerCount(count) {
     try {
-        document.getElementById("playerCount").innerText = count
+        document.getElementById("playerCount").innerText = count - 1
 
     } catch (e) {}
 }

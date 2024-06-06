@@ -4,7 +4,6 @@
         <title>WebSocket Test</title>
         <link rel="shortcut icon" href="#">
         <link rel="modulepreload" href="engine.js" />
-        <link rel="modulepreload" href="gamesocket.js" />
         <link rel="modulepreload" href="mapping.js" />
         <link rel="modulepreload" href="windowevents.js" />
         <link rel="modulepreload" href="imagehandler.js" />
@@ -96,6 +95,30 @@
             select::-ms-expand {
                 display: none;
             }
+            .nickname-input {
+                width: 100%;
+                max-width: 300px;
+                padding: 10px 15px;
+                font-size: 16px;
+                border: 2px solid #ccc;
+                border-radius: 5px;
+                background-color: #f9f9f9;
+                color: #333;
+                outline: none;
+                transition: border-color 0.3s, box-shadow 0.3s;
+            }
+            
+            /* Placeholder text color */
+            .nickname-input::placeholder {
+                color: #aaa;
+            }
+            
+            /* Focus state styles */
+            .nickname-input:focus {
+                border-color: #66afe9;
+                box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+                background-color: #fff;
+            }
         </style>
     </head>
     <body style="width: 100vw; height: 100vh">
@@ -103,9 +126,10 @@
             <div id="joinGameInfo">
                 <h1>Welcome to the Game!</h1>
                 <p id="playersOnline" style="display: inline-block">Players Online:&nbsp<p id="playerCount" style="display: inline-block"> </p></p>
+                <input placeholder="Type a nickname" class="nickname-input" type="text">
                 <div class="dropdown-container">
                     <select id="server">
-                        <option value="https://wwww-3ods.onrender.com" selected>🇺🇸 USA - Virginia </option>
+                        <option value="https://wwww-3ods.onrender.com">🇺🇸 USA - Virginia </option>
                         <option value="https://ohio-server-tm62.onrender.com">🇺🇸 USA - Ohio </option>
                         <option value="https://websocket-wss-1-mqc9.onrender.com">🇺🇸 USA - Oregon </option>
                         <option value="https://singapore-server.onrender.com">🇸🇬 ASIA - Signapore </option>

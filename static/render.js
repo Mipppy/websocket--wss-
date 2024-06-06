@@ -1,6 +1,5 @@
-import { predictedX, predictedY } from "./engine.js";
 import { images } from "./imagehandler.js";
-import { playerUUID } from "./worker_handler.js";
+import { playerData, playerUUID } from "./worker_handler.js";
 
 export let canvas;
 export let context;
@@ -21,9 +20,13 @@ export function initCanvas() {
     canvas.height = document.body.clientHeight;
 }
 
-export function renderPlayers(players) {
+function areBytewiseEqual(a, b) {
+    return indexedDB.cmp(a, b) === 0;
+  }
+
+export function renderPlayers() {
     context.clearRect(0, 0, canvas.width, canvas.height);
-    currentPlayer = players.find(player => player.uuid === playerUUID);
+    currentPlayer = playerData.find(player =>  areBytewiseEqual(player.uuid, playerUUID));
     if (!currentPlayer) return;
     context.fillStyle = 'rgba(255, 0, 0, 0.5)';
     const playerImage = images.get("player");
@@ -31,18 +34,19 @@ export function renderPlayers(players) {
     const halfCanvasHeight = canvas.height / 2;
     const adjustedRadii = radii * 2.5;
     const strokeRadii = radii;
-    players.forEach(player => {
+    playerData.forEach(player => {
 
-        let [x, y] = getPredictedRelative(player.x, player.y);
-
+        let [x, y] = getRelative(player.x, player.y);
         if (player.uuid === playerUUID) {
             x = halfCanvasWidth;
             y = halfCanvasHeight;
         } else {
             x += radii;
             y += radii;
+        } 
+        if (x < 0 || y > canvas.width || x < 0 || y > canvas.height) {
+            return
         }
-
         context.save();
         context.beginPath();
         context.arc(x, y, radii * 1.5, 0, Math.PI * 2, true);
@@ -59,7 +63,7 @@ export function renderPlayers(players) {
 export function renderBoxes(boxes) {
     context.fillStyle = 'rgba(0, 0, 255, 0.5)';
     boxes.forEach(box => {
-        const [relativeX, relativeY] = getPredictedRelative(box.x, box.y);
+        const [relativeX, relativeY] = getRelative(box.x, box.y);
         context.beginPath();
         context.drawImage(images.get("wall"), relativeX + radii, relativeY + radii, box.width, box.height);
         context.rect(relativeX + radii, relativeY + radii, box.width, box.height)
