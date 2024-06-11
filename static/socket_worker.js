@@ -40,10 +40,10 @@ function initWebSocket(url) {
 
 function getPlayerData() {
     if (socket && socket.readyState === WebSocket.OPEN) {
-        var da = new Uint8Array(5);
+        var da = new Uint8Array(6);
         var asd = new $BOOLBYTE();
 
-        asd.toggleToMatch(keypress);
+        asd.toggleToMatch(keypress[0]);
 
         asd.set(0, true);
         asd.set(1, true);
@@ -53,6 +53,7 @@ function getPlayerData() {
         for (let i = 0; i < playerUUID.length; i++) {
             da[i + 1] = playerUUID[i];
         }
+        da[da.length - 1] = keypress[1]
         socket.send(da);
         pingStartTime = Date.now();
     }
@@ -60,10 +61,10 @@ function getPlayerData() {
 
 function getLevelData() {
     if (socket && socket.readyState === WebSocket.OPEN) {
-        var da = new Uint8Array(5);
+        var da = new Uint8Array(6);
         var asd = new $BOOLBYTE();
 
-        asd.toggleToMatch(keypress);
+        asd.toggleToMatch(keypress[0]);
 
         asd.set(0, true);
         asd.set(1, true);
@@ -128,26 +129,27 @@ function handleLevelData(compressedData) {
     self.postMessage({type: "level", level: decompressedData});
 }
 
-
-
-
-
 function handlePlayerData(data) {
     var players = { count: data[1], data: [], ping: ping1, type: "data" };
     var totalplayerdata = [];
     var uuid = data.slice(-4);
 
-    var playerByteAmount = data[1] * 4;
+    var playerByteAmount = data[1] * 5;  
 
-    for (let i = 2, playerIndex = 0; i < 2 + playerByteAmount; i += 4, playerIndex++) {
+    for (let i = 2, playerIndex = 0; i < 2 + playerByteAmount; i += 5, playerIndex++) {
         var x = (data[i] << 8) | data[i + 1];
         var y = (data[i + 2] << 8) | data[i + 3];
-
-        totalplayerdata.push({ x: x, y: y, uuid: playerIndex === data[1] - 1 ? uuid : 0 });
+        var angle = data[i + 4]; 
+        totalplayerdata.push({
+            x: x,
+            y: y,
+            angle: angle,
+            uuid: playerIndex === data[1] - 1 ? uuid : 0
+        });
     }
 
     players.data = totalplayerdata;
-    self.postMessage(players)
+    self.postMessage(players);
 }
 
 
@@ -194,7 +196,7 @@ self.addEventListener('message', (event) => {
         for (let i = 0; i < data.k.length; i++) {
             newKeypress.set(i, data.k[i] == "1" ? true : false);
         }
-        keypress = newKeypress;
+        keypress = [newKeypress, data.a];
     } else if (data.type === "g") {
         shouldPoll = true;
     }

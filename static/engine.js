@@ -1,16 +1,13 @@
 import { currentPlayer, renderBoxes, renderPlayers } from "./render.js";
+import { canvas } from "./render.js";
 import { boxes } from "./mapping.js";
 import { ping1 } from "./worker_handler.js";
 import { $BOOLBYTE } from "./boolbyte.js";
 export var lastX, lastY, stats, pingPanel;
 
 export var moveDataBinary = new $BOOLBYTE();
-export var keypresses = {
-    w: false,
-    a: false,
-    s: false,
-    d: false,
-};
+export var playerAngle = new Uint8Array(1);
+playerAngle[0] = 0
 
 export function createEngineWindowEvents() {
     window.onkeydown = function (event) {
@@ -45,6 +42,11 @@ export function createEngineWindowEvents() {
                 moveDataBinary.set(7, false);
                 break;
         }
+    };
+    window.onmousemove = function (pos) {
+        // Angle is between 0-255 to fit in one byte :)
+        var angle = Math.round(Math.atan2(pos.clientY - canvas.height / 2, pos.clientX - canvas.width / 2) * 256 / (2 * Math.PI) + 256) % 256;
+        playerAngle[0] = angle;
     };
 }
 

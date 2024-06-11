@@ -1,7 +1,7 @@
 import { startGame } from "./script.js";
 import { openWebWorker, switchServer } from "./worker_handler.js";
 var server = document.getElementById("server")
-openWebWorker(server.options[server.selectedIndex].value)
+openWebWorker("ws://localhost:8000")
 
 document.getElementById("joinGameButton").onclick = (event) => {
     cleanupGUI()

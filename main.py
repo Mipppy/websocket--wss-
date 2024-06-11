@@ -61,7 +61,7 @@ def compress_2d_list(data):
 players = [] 
 
 
-async def handleKeypresses(first_byte, uuid_bytes, *args, **kwargs):
+async def handleKeypresses(first_byte, uuid_bytes, angle, *args, **kwargs):
     try:
         keypress = (first_byte & 0xF0) >> 4
         binary_keypress = bin(keypress)[2:].zfill(4)
@@ -72,11 +72,12 @@ async def handleKeypresses(first_byte, uuid_bytes, *args, **kwargs):
                 player["a"] = binary_keypress[2] == "1"
                 player["s"] = binary_keypress[1] == "1"
                 player["d"] = binary_keypress[0] == "1"
+                player["angle"] = angle
                 player_exists = True
                 break
 
         if not player_exists:
-            players.append({"uuid": uuid_bytes,"x": random.randint(10, 1000),"y": random.randint(10, 1000),"lastRequest": 0,"w": False,"a": False,"s": False,"d": False,"xvel": 0,"yvel": 0,})
+            players.append({"uuid": uuid_bytes,"x": random.randint(10, 1000),"y": random.randint(10, 1000),"lastRequest": 0,"w": False,"a": False,"s": False,"d": False,"xvel": 0,"yvel": 0, "angle": 0})
     except Exception as e:
         print(f"Error in handleKeypresses: {e}")
 
@@ -192,13 +193,11 @@ def collison():
 
 
 def compressPlayerData(uuid_bytes, players):
-
     data = bytearray()
     num_players = len(players)
     data.extend(struct.pack("!B", 15))
     data.extend(struct.pack("!B", num_players))
 
-    playerXYOverflowHandler()
     player_with_uuid = None
     other_players = []
 
@@ -211,27 +210,28 @@ def compressPlayerData(uuid_bytes, players):
     for player in other_players:
         data.extend(struct.pack("!H", round(player["x"])))
         data.extend(struct.pack("!H", round(player["y"])))
+        data.extend(struct.pack("!B", player["angle"]))
 
     if player_with_uuid:
         data.extend(struct.pack("!H", round(player_with_uuid["x"])))
         data.extend(struct.pack("!H", round(player_with_uuid["y"])))
+        data.extend(struct.pack("!B", player_with_uuid["angle"]))
 
     data.extend(uuid_bytes)
     return data.decode("latin-1")
-
 
 async def handleGetData(*args, **kwargs):
     try:
         player_uuid = args[0][1:5]
         handleAFKDisconnects(player_uuid)
-        await handleKeypresses(args[0][0], player_uuid)
+        await handleKeypresses(args[0][0], player_uuid ,args[0][5])
         player_with_uuid = next((player for player in players if player["uuid"] == player_uuid), None)
-        if player_uuid:
+        if player_with_uuid:
             copy_of_players = copy.deepcopy(players)
             for player in copy_of_players:
-                del ( player["lastRequest"],player["w"],player["a"],player["s"],player["d"],player["xvel"],player["yvel"],)
+                del (player["lastRequest"], player["w"], player["a"], player["s"], player["d"], player["xvel"], player["yvel"])
                 if player["uuid"] != player_uuid:
-                    if distance(player_with_uuid["x"], player_with_uuid["y"], player["x"], player["y"]) >= 1200:
+                    if distance(player_with_uuid["x"], player_with_uuid["y"], player["x"], player["y"]) >= 1500:
                         copy_of_players.remove(player)
                 player["x"] = round(player["x"], 1)
                 player["y"] = round(player["y"], 1)

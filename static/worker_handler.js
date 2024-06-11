@@ -1,4 +1,4 @@
-import { moveDataBinary } from "./engine.js";
+import { moveDataBinary, playerAngle } from "./engine.js";
 import { loadLevel } from "./mapping.js";
 import { handlePlayerCount } from "./menu.js";
 export var worker;
@@ -33,7 +33,7 @@ export function createWorkerWindowEvents() {
 }
 
 export function giveKeypresses() {
-    worker.postMessage({type: "k", k: moveDataBinary.uint[0].toString(2).split("").reverse()})
+    worker.postMessage({type: "k", k: moveDataBinary.uint[0].toString(2).split("").reverse(), a : playerAngle})
 }
 
 export function startErUp() {
