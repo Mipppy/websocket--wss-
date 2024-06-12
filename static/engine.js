@@ -1,4 +1,4 @@
-import { currentPlayer, renderBoxes, renderPlayers } from "./render.js";
+import { currentPlayer, renderPlayers, } from "./render.js";
 import { canvas } from "./render.js";
 import { boxes } from "./mapping.js";
 import { ping1 } from "./worker_handler.js";
@@ -74,7 +74,6 @@ export function gameLoop() {
     const elapsedTime = currentTime - lastFrameTime;
     try { stats.begin() } catch (e) { }
     renderPlayers();
-    renderBoxes(boxes);
     try { pingPanel.update(ping1, ping1 < 25 ? 25 : (ping1 < 75 ? 75 : 200)); } catch (error) { }
     lastFrameTime = performance.now() - (elapsedTime % frameInterval);
     try { stats.end() } catch (e) { }
