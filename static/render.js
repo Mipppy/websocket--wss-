@@ -98,7 +98,7 @@ export function renderPlayers() {
         // This might be used in the future for detection of objects without
         // Using every ray.  It likely won't be used though, and only serves
         // to ruin performance.
-        
+
         // playerData.forEach(otherPlayer => {
         //     if (otherPlayer.uuid !== player.uuid) {
         //         let [otherX, otherY] = getRelative(otherPlayer.x, otherPlayer.y);
@@ -233,7 +233,8 @@ function shineLight(light) {
         if (firstIntersectionBox) {
             firstIntersectionBox.visible = true;
             firstIntersectionBox.intersectionCount++;
-            firstIntersectionBox.opacity = 1 - ((distance(closestIntersection[0], closestIntersection[1], light.position.x, light.position.y) * (1-(firstIntersectionBox.intersectionCount/100))) / 700) / (0.9 + (firstIntersectionBox.intersectionCount/100))
+            const distanceToSomething = distance(closestIntersection[0], closestIntersection[1], light.position.x, light.position.y)
+            firstIntersectionBox.opacity = 1 - (distanceToSomething * (1 - (firstIntersectionBox.intersectionCount / 100)) / 700) / ((0.9 + (distanceToSomething / 700) * .1))
             endX = closestIntersection[0];
             endY = closestIntersection[1];
         }
