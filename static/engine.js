@@ -1,6 +1,5 @@
 import { currentPlayer, renderPlayers, } from "./render.js";
 import { canvas } from "./render.js";
-import { boxes } from "./mapping.js";
 import { ping1 } from "./worker_handler.js";
 import { $BOOLBYTE } from "./boolbyte.js";
 export var lastX, lastY, stats, pingPanel;

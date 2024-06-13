@@ -8,12 +8,15 @@ def compress_2d_list(data):
         compressed_data += compressed_row
     return compressed_data
 
-# CONSTRAINTS:  MUST BE A POWER OF 2 & ALL ROWS MUST BE EQUAL LENGTH
+# CONSTRAINTS:  LENGTH MUST BE A POWER OF 2 & ALL ROWS MUST BE EQUAL LENGTH
 level = [
     [0, 0, 0, 0, 0, 1, 0, 0],
     [0, 0, 0, 0, 1, 0, 0, 0],
     [1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0],
     [1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0],
     [1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
@@ -21,7 +24,7 @@ players = []
 RADII = 40
 MAP_WALL_GEOMETRY = RADII * 2
 SPEED = 3.0
-DIAGONAL_SPEED_PENALTY = 0.9071
+DIAGONAL_SPEED_PENALTY = 0.90
 
 class Box:
     def __init__(self, x, y, width, height):
