@@ -234,5 +234,5 @@ function binaryStringToUint8Array(binaryString) {
 
 setInterval(() => {
     shouldPoll ? self.postMessage({ "type": "keypresses" }) : null;
-    getPlayerData()
+    shouldPoll ? getPlayerData() : null;
 }, 1000 / 60)

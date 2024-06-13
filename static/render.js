@@ -94,24 +94,29 @@ export function renderPlayers() {
             return;
         }
 
-        playerData.forEach(otherPlayer => {
-            if (otherPlayer.uuid !== player.uuid) {
-                let [otherX, otherY] = getRelative(otherPlayer.x, otherPlayer.y);
-                if (otherPlayer.uuid === playerUUID) {
-                    otherX = canvas.width / 2;
-                    otherY = canvas.height / 2;
-                } else {
-                    otherX += radii;
-                    otherY += radii;
-                }
-                const angleRad = (otherPlayer.angle / 256) * (2 * Math.PI);
-                for (let i = -10; i <= 10; i += 5) {
-                    const rayX = otherX + 700 * Math.cos(angleRad + (i * Math.PI / 180));
-                    const rayY = otherY + 700 * Math.sin(angleRad + (i * Math.PI / 180));
-                    rays.push([otherX, otherY, rayX, rayY]);
-                }
-            }
-        });
+
+        // This might be used in the future for detection of objects without
+        // Using every ray.  It likely won't be used though, and only serves
+        // to ruin performance.
+        
+        // playerData.forEach(otherPlayer => {
+        //     if (otherPlayer.uuid !== player.uuid) {
+        //         let [otherX, otherY] = getRelative(otherPlayer.x, otherPlayer.y);
+        //         if (otherPlayer.uuid === playerUUID) {
+        //             otherX = canvas.width / 2;
+        //             otherY = canvas.height / 2;
+        //         } else {
+        //             otherX += radii;
+        //             otherY += radii;
+        //         }
+        //         const angleRad = (otherPlayer.angle / 256) * (2 * Math.PI);
+        //         for (let i = -10; i <= 10; i += 5) {
+        //             const rayX = otherX + 700 * Math.cos(angleRad + (i * Math.PI / 180));
+        //             const rayY = otherY + 700 * Math.sin(angleRad + (i * Math.PI / 180));
+        //             rays.push([otherX, otherY, rayX, rayY]);
+        //         }
+        //     }
+        // });
 
         context.fillStyle = hitboxColor;
         context.beginPath();
@@ -180,6 +185,8 @@ export class Block {
         this.width = _width;
         this.height = _height;
         this.visible = false;
+        this.opacity = 0;
+        this.intersectionCount = 0;
     }
 }
 
@@ -194,13 +201,13 @@ function shineLights() {
 function shineLight(light) {
     const startAngle = (light.angle - light.angleSpread / 2) * (Math.PI / 180);
     const endAngle = (light.angle + light.angleSpread / 2) * (Math.PI / 180);
-    const step = (endAngle - startAngle) / 100;
+    const step = (endAngle - startAngle) / 55;
     rays = [];
 
     for (let angle = startAngle; angle <= endAngle; angle += step) {
         let endX = light.position.x + light.radius * Math.cos(angle);
         let endY = light.position.y + light.radius * Math.sin(angle);
-
+        let distToWall = 0
         let closestIntersection = null;
         let closestDistance = Infinity;
         let firstIntersectionBox = null;
@@ -225,6 +232,8 @@ function shineLight(light) {
         }
         if (firstIntersectionBox) {
             firstIntersectionBox.visible = true;
+            firstIntersectionBox.intersectionCount++;
+            firstIntersectionBox.opacity = 1 - ((distance(closestIntersection[0], closestIntersection[1], light.position.x, light.position.y) * (1-(firstIntersectionBox.intersectionCount/100))) / 700) / (0.9 + (firstIntersectionBox.intersectionCount/100))
             endX = closestIntersection[0];
             endY = closestIntersection[1];
         }
@@ -240,8 +249,8 @@ function shineLight(light) {
 
 
 function renderBlocksHitByLight() {
-    context.fillStyle = 'rgba(0, 128, 0, 1)';
     boxes.forEach(box => {
+        context.fillStyle = `rgba(0, 128, 0, ${box.opacity})`;
         if (box.visible) {
             const [relX, relY] = getRelative(box.position.x, box.position.y);
             context.beginPath();
@@ -249,6 +258,8 @@ function renderBlocksHitByLight() {
             context.fill();
         }
         box.visible = false
+        box.opacity = 0
+        box.intersectionCount = 0
     });
 }
 
