@@ -40,7 +40,7 @@ function initWebSocket(url) {
 
 function getPlayerData() {
     if (socket && socket.readyState === WebSocket.OPEN) {
-        var da = new Uint8Array(6);
+        var da = new Uint8Array(7);
         var asd = new $BOOLBYTE();
 
         asd.toggleToMatch(keypress[0]);
@@ -53,7 +53,8 @@ function getPlayerData() {
         for (let i = 0; i < playerUUID.length; i++) {
             da[i + 1] = playerUUID[i];
         }
-        da[da.length - 1] = keypress[1]
+        da[da.length - 2] = keypress[1]
+        da[da.length - 1] = keypress[2]
         socket.send(da);
         pingStartTime = Date.now();
     }
@@ -134,23 +135,25 @@ function handlePlayerData(data) {
     var totalplayerdata = [];
     var uuid = data.slice(-4);
 
-    var playerByteAmount = data[1] * 5;  
+    var playerByteAmount = data[1] * 6;
 
-    for (let i = 2, playerIndex = 0; i < 2 + playerByteAmount; i += 5, playerIndex++) {
+    for (let i = 2, playerIndex = 0; i < 2 + playerByteAmount; i += 6, playerIndex++) {
         var x = (data[i] << 8) | data[i + 1];
         var y = (data[i + 2] << 8) | data[i + 3];
         var angle = data[i + 4]; 
+        var flashLightStatus = data[i + 5]; 
         totalplayerdata.push({
             x: x,
             y: y,
             angle: angle,
+            flashLightStatus: flashLightStatus, 
             uuid: playerIndex === data[1] - 1 ? uuid : 0
         });
     }
-
     players.data = totalplayerdata;
     self.postMessage(players);
 }
+
 
 
 function handleMessages(event) {
@@ -196,7 +199,7 @@ self.addEventListener('message', (event) => {
         for (let i = 0; i < data.k.length; i++) {
             newKeypress.set(i, data.k[i] == "1" ? true : false);
         }
-        keypress = [newKeypress, data.a];
+        keypress = [newKeypress, data.a, data.f];
     } else if (data.type === "g") {
         shouldPoll = true;
     }

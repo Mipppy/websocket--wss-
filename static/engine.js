@@ -4,6 +4,10 @@ import { ping1 } from "./worker_handler.js";
 import { $BOOLBYTE } from "./boolbyte.js";
 export var lastX, lastY, stats, pingPanel;
 
+// Waste of a byte, might be able to cram more stuff in it.
+export var flashLightState = new $BOOLBYTE();
+flashLightState.set(0, true)
+
 export var moveDataBinary = new $BOOLBYTE();
 export var playerAngle = new Uint8Array(1);
 playerAngle[0] = 0
@@ -40,8 +44,11 @@ export function createEngineWindowEvents() {
             case 'd':
                 moveDataBinary.set(7, false);
                 break;
+            case 'e':
+                flashLightState.set(0, flashLightState.get(0) ? false : true)
         }
     };
+
     window.onmousemove = function (pos) {
         // Angle is between 0-255 to fit in one byte :)
         var angle = Math.round(Math.atan2(pos.clientY - canvas.height / 2, pos.clientX - canvas.width / 2) * 256 / (2 * Math.PI) + 256) % 256;

@@ -1,4 +1,4 @@
-import { moveDataBinary, playerAngle } from "./engine.js";
+import { flashLightState, moveDataBinary, playerAngle } from "./engine.js";
 import { loadLevel } from "./mapping.js";
 import { handlePlayerCount } from "./menu.js";
 export var worker;
@@ -33,7 +33,7 @@ export function createWorkerWindowEvents() {
 }
 
 export function giveKeypresses() {
-    worker.postMessage({type: "k", k: moveDataBinary.uint[0].toString(2).split("").reverse(), a : playerAngle})
+    worker.postMessage({type: "k", k: moveDataBinary.uint[0].toString(2).split("").reverse(), a : playerAngle, f: flashLightState.uint[0]})
 }
 
 export function startErUp() {

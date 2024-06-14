@@ -36,6 +36,7 @@ function lineIntersectsLine(x1, y1, x2, y2, x3, y3, x4, y4) {
         const gamma = ((y1 - y2) * (x4 - x1) + (x2 - x1) * (y4 - y1)) / det;
         return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
     }
+
 }
 
 export function renderPlayers() {
@@ -63,6 +64,7 @@ export function renderPlayers() {
         if (x < 0 || y > canvas.width || x < 0 || y > canvas.height) {
             return;
         }
+        if (player.flashLightStatus || currentPlayer === player) {
 
         context.save();
         context.beginPath();
@@ -74,55 +76,57 @@ export function renderPlayers() {
         context.arc(x, y, strokeRadii, 0, Math.PI * 2, true);
         context.fill();
         context.restore();
-
-        const playerAngle = (player.angle / 256) * 360;
-        let light = new Light(new Vector(x, y), 700, 20, 'rgba(255,255,255,0.6)');
-        light.angle = playerAngle;
-        lights.push(light);
+            if (player.flashLightStatus) {
+                const playerAngle = (player.angle / 256) * 360;
+                let light = new Light(new Vector(x, y), 700, 20, 'rgba(255,255,255,0.6)');
+                light.angle = playerAngle;
+                lights.push(light);
+            }
+        }
     });
 
     shineLights();
     renderBorderLines()
-    playerData.forEach(player => {
-        let hitboxColor = 'blue';
-        let [x, y] = getRelative(player.x, player.y);
-        if (player.uuid !== playerUUID) {
-            x += radii;
-            y += radii;
-        }
-        if (x < 0 || y > canvas.width || x < 0 || y > canvas.height) {
-            return;
-        }
+    // playerData.forEach(player => {
+    //     let hitboxColor = 'blue';
+    //     let [x, y] = getRelative(player.x, player.y);
+    //     if (player.uuid !== playerUUID) {
+    //         x += radii;
+    //         y += radii;
+    //     }
+    //     if (x < 0 || y > canvas.width || x < 0 || y > canvas.height) {
+    //         return;
+    //     }
 
 
-        // This might be used in the future for detection of objects without
-        // Using every ray.  It likely won't be used though, and only serves
-        // to ruin performance.
+    //     // This might be used in the future for detection of objects without
+    //     // Using every ray.  It likely won't be used though, and only serves
+    //     // to ruin performance.
 
-        // playerData.forEach(otherPlayer => {
-        //     if (otherPlayer.uuid !== player.uuid) {
-        //         let [otherX, otherY] = getRelative(otherPlayer.x, otherPlayer.y);
-        //         if (otherPlayer.uuid === playerUUID) {
-        //             otherX = canvas.width / 2;
-        //             otherY = canvas.height / 2;
-        //         } else {
-        //             otherX += radii;
-        //             otherY += radii;
-        //         }
-        //         const angleRad = (otherPlayer.angle / 256) * (2 * Math.PI);
-        //         for (let i = -10; i <= 10; i += 5) {
-        //             const rayX = otherX + 700 * Math.cos(angleRad + (i * Math.PI / 180));
-        //             const rayY = otherY + 700 * Math.sin(angleRad + (i * Math.PI / 180));
-        //             rays.push([otherX, otherY, rayX, rayY]);
-        //         }
-        //     }
-        // });
+    //     // playerData.forEach(otherPlayer => {
+    //     //     if (otherPlayer.uuid !== player.uuid) {
+    //     //         let [otherX, otherY] = getRelative(otherPlayer.x, otherPlayer.y);
+    //     //         if (otherPlayer.uuid === playerUUID) {
+    //     //             otherX = canvas.width / 2;
+    //     //             otherY = canvas.height / 2;
+    //     //         } else {
+    //     //             otherX += radii;
+    //     //             otherY += radii;
+    //     //         }
+    //     //         const angleRad = (otherPlayer.angle / 256) * (2 * Math.PI);
+    //     //         for (let i = -10; i <= 10; i += 5) {
+    //     //             const rayX = otherX + 700 * Math.cos(angleRad + (i * Math.PI / 180));
+    //     //             const rayY = otherY + 700 * Math.sin(angleRad + (i * Math.PI / 180));
+    //     //             rays.push([otherX, otherY, rayX, rayY]);
+    //     //         }
+    //     //     }
+    //     // });
 
-        context.fillStyle = hitboxColor;
-        context.beginPath();
-        context.arc(x, y, strokeRadii, 0, Math.PI * 2, true);
-        context.fill();
-    });
+    //     context.fillStyle = hitboxColor;
+    //     context.beginPath();
+    //     context.arc(x, y, strokeRadii, 0, Math.PI * 2, true);
+    //     context.fill();
+    // });
 
 }
 
@@ -207,7 +211,6 @@ function shineLight(light) {
     for (let angle = startAngle; angle <= endAngle; angle += step) {
         let endX = light.position.x + light.radius * Math.cos(angle);
         let endY = light.position.y + light.radius * Math.sin(angle);
-        let distToWall = 0
         let closestIntersection = null;
         let closestDistance = Infinity;
         let firstIntersectionBox = null;
@@ -244,6 +247,26 @@ function shineLight(light) {
         context.stroke();
 
         rays.push({ x1: light.position.x, y1: light.position.y, x2: endX, y2: endY });
+
+    }
+    for (const ray of rays) {
+        for (let player of playerData) {
+            if (player.flashLightStatus) return
+            const [x,y] = getRelative(player.x, player.y)
+            const int = lineCircleIntersectionPoint(ray.x1, ray.y1, ray.x2, ray.y2,x+radii, y+radii, radii)
+            if (int) {
+                context.save();
+                context.beginPath();
+                context.arc(x + radii, y + radii, radii * 1.5, 0, Math.PI * 2, true);
+                context.clip();
+                context.drawImage(images.get("player"), x, y, radii * 2.5, radii * 2.5);
+        
+                context.beginPath();
+                context.arc(x + radii, y + radii, radii, 0, Math.PI * 2, true);
+                context.fill();
+                context.restore();
+            }
+        }
     }
 }
 
@@ -312,5 +335,38 @@ function lineLineIntersectionPoint(x1, y1, x2, y2, x3, y3, x4, y4) {
         const intersectionX = x1 + lambda * (x2 - x1);
         const intersectionY = y1 + lambda * (y2 - y1);
         return [intersectionX, intersectionY];
+    }
+}
+
+function lineCircleIntersectionPoint(x1, y1, x2, y2, cx, cy, radius) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const fx = x1 - cx;
+    const fy = y1 - cy;
+
+    const a = dx * dx + dy * dy;
+    const b = 2 * (fx * dx + fy * dy);
+    const c = fx * fx + fy * fy - radius * radius;
+
+    const discriminant = b * b - 4 * a * c;
+
+    if (discriminant < 0) {
+        // No intersection, return null
+        return null;
+    } else if (discriminant === 0) {
+        // Tangent, return one point of intersection
+        const t = -b / (2 * a);
+        const intersectionX = x1 + t * dx;
+        const intersectionY = y1 + t * dy;
+        return [[intersectionX, intersectionY]];
+    } else {
+        // Two points of intersection
+        const t1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+        const t2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+        const intersection1X = x1 + t1 * dx;
+        const intersection1Y = y1 + t1 * dy;
+        const intersection2X = x1 + t2 * dx;
+        const intersection2Y = y1 + t2 * dy;
+        return [[intersection1X, intersection1Y], [intersection2X, intersection2Y]];
     }
 }

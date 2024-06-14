@@ -64,7 +64,7 @@ def compress_2d_list(data):
 players = [] 
 
 
-async def handleKeypresses(first_byte, uuid_bytes, angle, *args, **kwargs):
+async def handleKeypresses(first_byte, uuid_bytes, angle, flash, *args, **kwargs):
     try:
         keypress = (first_byte & 0xF0) >> 4
         binary_keypress = bin(keypress)[2:].zfill(4)
@@ -76,11 +76,12 @@ async def handleKeypresses(first_byte, uuid_bytes, angle, *args, **kwargs):
                 player["s"] = binary_keypress[1] == "1"
                 player["d"] = binary_keypress[0] == "1"
                 player["angle"] = angle
+                player["flashLightStatus"] = flash == 1
                 player_exists = True
                 break
 
         if not player_exists:
-            players.append({"uuid": uuid_bytes,"x": random.randint(10, 1000),"y": random.randint(10, 1000),"lastRequest": 0,"w": False,"a": False,"s": False,"d": False,"xvel": 0,"yvel": 0, "angle": 0})
+            players.append({"uuid": uuid_bytes,"x": random.randint(10, 1000),"y": random.randint(10, 1000),"lastRequest": 0,"w": False,"a": False,"s": False,"d": False,"xvel": 0,"yvel": 0, "angle": 0, "flashLightStatus": False})
     except Exception as e:
         print(f"Error in handleKeypresses: {e}")
 
@@ -214,11 +215,13 @@ def compressPlayerData(uuid_bytes, players):
         data.extend(struct.pack("!H", round(player["x"])))
         data.extend(struct.pack("!H", round(player["y"])))
         data.extend(struct.pack("!B", player["angle"]))
+        data.extend(struct.pack("!B", player["flashLightStatus"]))
 
     if player_with_uuid:
         data.extend(struct.pack("!H", round(player_with_uuid["x"])))
         data.extend(struct.pack("!H", round(player_with_uuid["y"])))
         data.extend(struct.pack("!B", player_with_uuid["angle"]))
+        data.extend(struct.pack("!B", player_with_uuid["flashLightStatus"]))
 
     data.extend(uuid_bytes)
     return data.decode("latin-1")
@@ -227,7 +230,7 @@ async def handleGetData(*args, **kwargs):
     try:
         player_uuid = args[0][1:5]
         handleAFKDisconnects(player_uuid)
-        await handleKeypresses(args[0][0], player_uuid ,args[0][5])
+        await handleKeypresses(args[0][0], player_uuid ,args[0][5], args[0][6])
         player_with_uuid = next((player for player in players if player["uuid"] == player_uuid), None)
         if player_with_uuid:
             copy_of_players = copy.deepcopy(players)
