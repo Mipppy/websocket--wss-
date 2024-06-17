@@ -213,11 +213,13 @@ function shineLight(light) {
                     const lightStartAngle = (light.angle - (light.angleSpread * 2) / 2) % 360;
                     const lightEndAngle = (light.angle + (light.angleSpread * 2) / 2) % 360;
 
+
+
                     const isWithinLightCone =
                         (lightStartAngle < lightEndAngle && adjustedAngle >= lightStartAngle && adjustedAngle <= lightEndAngle) ||
                         (lightStartAngle > lightEndAngle && (adjustedAngle >= lightStartAngle || adjustedAngle <= lightEndAngle));
-
-                    if (isWithinLightCone) {
+                    var dista = distance(x,y, light.position.x, light.position.y)
+                    if (isWithinLightCone && dista <= (700 + (radii*2) - radii/10)) {
                         context.save();
                         context.beginPath();
                         context.arc(x + radii, y + radii, radii * 1.5, 0, Math.PI * 2, true);
@@ -250,26 +252,6 @@ function shineLight(light) {
         rays.push({ x1: light.position.x, y1: light.position.y, x2: endX, y2: endY });
     }
 }
-
-function isPlayerInView(currentPlayer, player, viewAngle, viewSpread) {
-    const angleToPlayer = Math.atan2(player.y - currentPlayer.y, player.x - currentPlayer.x) * (180 / Math.PI);
-    let adjustedViewAngle = viewAngle;
-    if (adjustedViewAngle < 0) adjustedViewAngle += 360;
-    const lowerBound = adjustedViewAngle - viewSpread / 2;
-    const upperBound = adjustedViewAngle + viewSpread / 2;
-
-    let normalizedAngleToPlayer = angleToPlayer;
-    if (normalizedAngleToPlayer < 0) normalizedAngleToPlayer += 360;
-
-    if (lowerBound < 0) {
-        return (normalizedAngleToPlayer >= lowerBound + 360 || normalizedAngleToPlayer <= upperBound);
-    } else if (upperBound >= 360) {
-        return (normalizedAngleToPlayer <= upperBound - 360 || normalizedAngleToPlayer >= lowerBound);
-    } else {
-        return (normalizedAngleToPlayer >= lowerBound && normalizedAngleToPlayer <= upperBound);
-    }
-}
-
 
 function renderBlocksHitByLight() {
     boxes.forEach(box => {
