@@ -219,7 +219,7 @@ function shineLight(light) {
                         (lightStartAngle < lightEndAngle && adjustedAngle >= lightStartAngle && adjustedAngle <= lightEndAngle) ||
                         (lightStartAngle > lightEndAngle && (adjustedAngle >= lightStartAngle || adjustedAngle <= lightEndAngle));
                     var dista = distance(x,y, light.position.x, light.position.y)
-                    if (isWithinLightCone && dista <= (700 + (radii*2) - radii/10)) {
+                    if (isWithinLightCone && dista <= (700 + (radii*2))) {
                         context.save();
                         context.beginPath();
                         context.arc(x + radii, y + radii, radii * 1.5, 0, Math.PI * 2, true);
