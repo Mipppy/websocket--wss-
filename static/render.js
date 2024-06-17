@@ -6,6 +6,8 @@ export let canvas;
 export let context;
 export let currentPlayer;
 export const radii = 40;
+export const lightRadii = 700;
+export const lightSpread = 20;
 let lights = [];
 let rays = [];
 
@@ -66,19 +68,19 @@ export function renderPlayers() {
         }
         if (player.flashLightStatus || currentPlayer === player) {
 
-        context.save();
-        context.beginPath();
-        context.arc(x, y, radii * 1.5, 0, Math.PI * 2, true);
-        context.clip();
-        context.drawImage(playerImage, x - radii, y - radii, adjustedRadii, adjustedRadii);
+            context.save();
+            context.beginPath();
+            context.arc(x, y, radii * 1.5, 0, Math.PI * 2, true);
+            context.clip();
+            context.drawImage(playerImage, x - radii, y - radii, adjustedRadii, adjustedRadii);
 
-        context.beginPath();
-        context.arc(x, y, strokeRadii, 0, Math.PI * 2, true);
-        context.fill();
-        context.restore();
+            context.beginPath();
+            context.arc(x, y, strokeRadii, 0, Math.PI * 2, true);
+            context.fill();
+            context.restore();
             if (player.flashLightStatus) {
                 const playerAngle = (player.angle / 256) * 360;
-                let light = new Light(new Vector(x, y), 700, 20, 'rgba(255,255,255,0.6)');
+                let light = new Light(new Vector(x, y), lightRadii, lightSpread, 'rgba(255,255,255,0.6)');
                 light.angle = playerAngle;
                 lights.push(light);
             }
@@ -87,47 +89,6 @@ export function renderPlayers() {
 
     shineLights();
     renderBorderLines()
-    // playerData.forEach(player => {
-    //     let hitboxColor = 'blue';
-    //     let [x, y] = getRelative(player.x, player.y);
-    //     if (player.uuid !== playerUUID) {
-    //         x += radii;
-    //         y += radii;
-    //     }
-    //     if (x < 0 || y > canvas.width || x < 0 || y > canvas.height) {
-    //         return;
-    //     }
-
-
-    //     // This might be used in the future for detection of objects without
-    //     // Using every ray.  It likely won't be used though, and only serves
-    //     // to ruin performance.
-
-    //     // playerData.forEach(otherPlayer => {
-    //     //     if (otherPlayer.uuid !== player.uuid) {
-    //     //         let [otherX, otherY] = getRelative(otherPlayer.x, otherPlayer.y);
-    //     //         if (otherPlayer.uuid === playerUUID) {
-    //     //             otherX = canvas.width / 2;
-    //     //             otherY = canvas.height / 2;
-    //     //         } else {
-    //     //             otherX += radii;
-    //     //             otherY += radii;
-    //     //         }
-    //     //         const angleRad = (otherPlayer.angle / 256) * (2 * Math.PI);
-    //     //         for (let i = -10; i <= 10; i += 5) {
-    //     //             const rayX = otherX + 700 * Math.cos(angleRad + (i * Math.PI / 180));
-    //     //             const rayY = otherY + 700 * Math.sin(angleRad + (i * Math.PI / 180));
-    //     //             rays.push([otherX, otherY, rayX, rayY]);
-    //     //         }
-    //     //     }
-    //     // });
-
-    //     context.fillStyle = hitboxColor;
-    //     context.beginPath();
-    //     context.arc(x, y, strokeRadii, 0, Math.PI * 2, true);
-    //     context.fill();
-    // });
-
 }
 
 function renderBorderLines() {
@@ -201,7 +162,6 @@ function shineLights() {
         renderBlocksHitByLight(light);
     });
 }
-
 function shineLight(light) {
     const startAngle = (light.angle - light.angleSpread / 2) * (Math.PI / 180);
     const endAngle = (light.angle + light.angleSpread / 2) * (Math.PI / 180);
@@ -209,8 +169,8 @@ function shineLight(light) {
     rays = [];
 
     for (let angle = startAngle; angle <= endAngle; angle += step) {
-        let endX = light.position.x + light.radius * Math.cos(angle);
-        let endY = light.position.y + light.radius * Math.sin(angle);
+        let endX = light.position.x + 700 * Math.cos(angle);
+        let endY = light.position.y + 700 * Math.sin(angle);
         let closestIntersection = null;
         let closestDistance = Infinity;
         let firstIntersectionBox = null;
@@ -233,58 +193,96 @@ function shineLight(light) {
                 }
             }
         }
+
+        for (let player of playerData) {
+            if (player.flashLightStatus) continue;
+            const [x, y] = getRelative(player.x, player.y);
+            const playerIntersection = lineCircleIntersectionPoint(light.position.x, light.position.y, endX, endY, x + radii, y + radii, radii);
+
+            if (playerIntersection) {
+                const playerDist = distance(light.position.x, light.position.y, playerIntersection[0][0], playerIntersection[0][1]);
+
+                if (playerDist < closestDistance) {
+                    const dx = x + radii - light.position.x;
+                    const dy = y + radii - light.position.y;
+                    const angleToPlayer = Math.atan2(dy, dx) * (180 / Math.PI);
+
+                    const adjustedAngle = (angleToPlayer + 360) % 360;
+
+                    // I have no idea why this has to be 40 ¯\_(ツ)_/¯.  But it does! Should be 20
+                    const lightStartAngle = (light.angle - (light.angleSpread * 2) / 2) % 360;
+                    const lightEndAngle = (light.angle + (light.angleSpread * 2) / 2) % 360;
+
+                    const isWithinLightCone =
+                        (lightStartAngle < lightEndAngle && adjustedAngle >= lightStartAngle && adjustedAngle <= lightEndAngle) ||
+                        (lightStartAngle > lightEndAngle && (adjustedAngle >= lightStartAngle || adjustedAngle <= lightEndAngle));
+
+                    if (isWithinLightCone) {
+                        context.save();
+                        context.beginPath();
+                        context.arc(x + radii, y + radii, radii * 1.5, 0, Math.PI * 2, true);
+                        context.clip();
+                        context.drawImage(images.get("player"), x, y, radii * 2.5, radii * 2.5);
+
+                        context.beginPath();
+                        context.arc(x + radii, y + radii, radii, 0, Math.PI * 2, true);
+                        context.fill();
+                        context.restore();
+                    }
+                }
+            }
+        }
+
         if (firstIntersectionBox) {
             firstIntersectionBox.visible = true;
             firstIntersectionBox.intersectionCount++;
-            const distanceToSomething = distance(closestIntersection[0], closestIntersection[1], light.position.x, light.position.y)
-            firstIntersectionBox.opacity = 1 - (distanceToSomething * (1 - (firstIntersectionBox.intersectionCount / 100)) / 700) / ((0.9 + (distanceToSomething / 700) * .1))
+            const distanceToSomething = distance(closestIntersection[0], closestIntersection[1], light.position.x, light.position.y);
+            firstIntersectionBox.opacity = 1 - (distanceToSomething * (1 - (firstIntersectionBox.intersectionCount / 100)) / 700) / ((0.9 + (distanceToSomething / 700) * 0.1));
             endX = closestIntersection[0];
             endY = closestIntersection[1];
         }
+
         context.beginPath();
         context.moveTo(light.position.x, light.position.y);
         context.lineTo(endX, endY);
         context.stroke();
 
         rays.push({ x1: light.position.x, y1: light.position.y, x2: endX, y2: endY });
-
     }
-    for (const ray of rays) {
-        for (let player of playerData) {
-            if (player.flashLightStatus) return
-            const [x,y] = getRelative(player.x, player.y)
-            const int = lineCircleIntersectionPoint(ray.x1, ray.y1, ray.x2, ray.y2,x+radii, y+radii, radii)
-            if (int) {
-                context.save();
-                context.beginPath();
-                context.arc(x + radii, y + radii, radii * 1.5, 0, Math.PI * 2, true);
-                context.clip();
-                context.drawImage(images.get("player"), x, y, radii * 2.5, radii * 2.5);
-        
-                context.beginPath();
-                context.arc(x + radii, y + radii, radii, 0, Math.PI * 2, true);
-                context.fill();
-                context.restore();
-            }
-        }
+}
+
+function isPlayerInView(currentPlayer, player, viewAngle, viewSpread) {
+    const angleToPlayer = Math.atan2(player.y - currentPlayer.y, player.x - currentPlayer.x) * (180 / Math.PI);
+    let adjustedViewAngle = viewAngle;
+    if (adjustedViewAngle < 0) adjustedViewAngle += 360;
+    const lowerBound = adjustedViewAngle - viewSpread / 2;
+    const upperBound = adjustedViewAngle + viewSpread / 2;
+
+    let normalizedAngleToPlayer = angleToPlayer;
+    if (normalizedAngleToPlayer < 0) normalizedAngleToPlayer += 360;
+
+    if (lowerBound < 0) {
+        return (normalizedAngleToPlayer >= lowerBound + 360 || normalizedAngleToPlayer <= upperBound);
+    } else if (upperBound >= 360) {
+        return (normalizedAngleToPlayer <= upperBound - 360 || normalizedAngleToPlayer >= lowerBound);
+    } else {
+        return (normalizedAngleToPlayer >= lowerBound && normalizedAngleToPlayer <= upperBound);
     }
 }
 
 
-
 function renderBlocksHitByLight() {
     boxes.forEach(box => {
-        context.fillStyle = `rgba(0, 128, 0, ${box.opacity})`;
+        context.globalAlpha = box.opacity;
         if (box.visible) {
             const [relX, relY] = getRelative(box.position.x, box.position.y);
-            context.beginPath();
-            context.rect(relX + radii, relY + radii, box.width, box.height);
-            context.fill();
+            context.drawImage(images.get("wall"), relX + radii, relY + radii, box.width, box.height);
         }
         box.visible = false
         box.opacity = 0
         box.intersectionCount = 0
     });
+    context.globalAlpha = 1;
 }
 
 
@@ -351,16 +349,13 @@ function lineCircleIntersectionPoint(x1, y1, x2, y2, cx, cy, radius) {
     const discriminant = b * b - 4 * a * c;
 
     if (discriminant < 0) {
-        // No intersection, return null
         return null;
     } else if (discriminant === 0) {
-        // Tangent, return one point of intersection
         const t = -b / (2 * a);
         const intersectionX = x1 + t * dx;
         const intersectionY = y1 + t * dy;
         return [[intersectionX, intersectionY]];
     } else {
-        // Two points of intersection
         const t1 = (-b + Math.sqrt(discriminant)) / (2 * a);
         const t2 = (-b - Math.sqrt(discriminant)) / (2 * a);
         const intersection1X = x1 + t1 * dx;
