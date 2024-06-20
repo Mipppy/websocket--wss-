@@ -1,9 +1,8 @@
 import { $BOOLBYTE } from "./boolbyte.js";
 let socket;
 const playerUUID = generate4ByteUUID();
-let pingStartTime = 0;
+let lowDataMode = true
 let ping1 = 0;
-const LEVEL_DATA_TIMEOUT = 5000;
 var fullMoveBinarySend = new Uint8Array(5)
 var keypress = []
 var shouldPoll = false;
@@ -47,16 +46,14 @@ function getPlayerData() {
 
         asd.set(0, true);
         asd.set(1, true);
-        asd.set(2, true);
-        asd.set(3, true);
+        asd.set(2, false);
+        asd.set(3, keypress[2]);
         da[0] = asd.uint[0];
         for (let i = 0; i < playerUUID.length; i++) {
             da[i + 1] = playerUUID[i];
         }
         da[da.length - 2] = keypress[1]
-        da[da.length - 1] = keypress[2]
         socket.send(da);
-        pingStartTime = Date.now();
     }
 }
 
@@ -75,7 +72,6 @@ function getLevelData() {
             da[i + 1] = playerUUID[i];
         }
         socket.send(da);
-        pingStartTime = Date.now();
     }
 }
 
@@ -238,4 +234,4 @@ function binaryStringToUint8Array(binaryString) {
 setInterval(() => {
     shouldPoll ? self.postMessage({ "type": "keypresses" }) : null;
     shouldPoll ? getPlayerData() : null;
-}, 1000 / 60)
+}, 1000 / lowDataMode ? 30 : 60)

@@ -33,7 +33,7 @@ export function createWorkerWindowEvents() {
 }
 
 export function giveKeypresses() {
-    worker.postMessage({type: "k", k: moveDataBinary.uint[0].toString(2).split("").reverse(), a : playerAngle, f: flashLightState.uint[0]})
+    worker.postMessage({type: "k", k: moveDataBinary.uint[0].toString(2).split("").reverse(), a : playerAngle, f: flashLightState})
 }
 
 export function startErUp() {

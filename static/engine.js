@@ -5,8 +5,7 @@ import { $BOOLBYTE } from "./boolbyte.js";
 export var lastX, lastY, stats, pingPanel;
 
 // Waste of a byte, might be able to cram more stuff in it.
-export var flashLightState = new $BOOLBYTE();
-flashLightState.set(0, true)
+export var flashLightState = true
 
 export var moveDataBinary = new $BOOLBYTE();
 export var playerAngle = new Uint8Array(1);
@@ -45,7 +44,7 @@ export function createEngineWindowEvents() {
                 moveDataBinary.set(7, false);
                 break;
             case 'e':
-                flashLightState.set(0, flashLightState.get(0) ? false : true)
+                flashLightState = !flashLightState
         }
     };
 

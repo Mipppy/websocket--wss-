@@ -25,6 +25,7 @@ RADII = 40
 MAP_WALL_GEOMETRY = RADII * 2
 SPEED = 3.0
 DIAGONAL_SPEED_PENALTY = 0.90
+LIGHT_RANGE = 700
 
 class Box:
     def __init__(self, x, y, width, height):
@@ -36,6 +37,7 @@ class Box:
 
 boxes = [Box(j * MAP_WALL_GEOMETRY, i * MAP_WALL_GEOMETRY,MAP_WALL_GEOMETRY,MAP_WALL_GEOMETRY,) for i, row in enumerate(level) for j, element in enumerate(row) if element == 1]
 
+connected_sockets = dict()
 
 async def handler(websocket, path):
     try:
@@ -43,7 +45,6 @@ async def handler(websocket, path):
             await handleBinary(message, websocket)
     except Exception as e:
         print(f"Error: {e}")
-
 
 def compress_2d_list(data):
     compressed_data = bytearray()
@@ -67,6 +68,7 @@ players = []
 async def handleKeypresses(first_byte, uuid_bytes, angle, flash, *args, **kwargs):
     try:
         keypress = (first_byte & 0xF0) >> 4
+        flashLight = (first_byte >> 3) & 0x01
         binary_keypress = bin(keypress)[2:].zfill(4)
         player_exists = False
         for player in players:
@@ -76,7 +78,7 @@ async def handleKeypresses(first_byte, uuid_bytes, angle, flash, *args, **kwargs
                 player["s"] = binary_keypress[1] == "1"
                 player["d"] = binary_keypress[0] == "1"
                 player["angle"] = angle
-                player["flashLightStatus"] = flash == 1
+                player["flashLightStatus"] = flashLight == 1
                 player_exists = True
                 break
 
@@ -229,22 +231,9 @@ def compressPlayerData(uuid_bytes, players):
 async def handleGetData(*args, **kwargs):
     try:
         player_uuid = args[0][1:5]
+        connected_sockets[player_uuid] = args[1]
         handleAFKDisconnects(player_uuid)
         await handleKeypresses(args[0][0], player_uuid ,args[0][5], args[0][6])
-        player_with_uuid = next((player for player in players if player["uuid"] == player_uuid), None)
-        if player_with_uuid:
-            copy_of_players = copy.deepcopy(players)
-            for player in copy_of_players:
-                del (player["lastRequest"], player["w"], player["a"], player["s"], player["d"], player["xvel"], player["yvel"])
-                if player["uuid"] != player_uuid:
-                    if distance(player_with_uuid["x"], player_with_uuid["y"], player["x"], player["y"]) >= 1500:
-                        copy_of_players.remove(player)
-                player["x"] = round(player["x"], 1)
-                player["y"] = round(player["y"], 1)
-
-            compressed_data = compressPlayerData(player_uuid, copy_of_players)
-            if compressed_data:
-                await args[1].send(compressed_data)
     except Exception as e:
         print(f"Error in handleGetData: {e}")
 
@@ -252,7 +241,8 @@ def handleAFKDisconnects(uuid):
     for player in players:
         if player["uuid"] != uuid:
             player["lastRequest"] = player["lastRequest"] + 1
-            if player["lastRequest"] > 50:
+            if player["lastRequest"] > 500:
+                connected_sockets.pop(player["uuid"])
                 players.remove(player)
         else:
             player["lastRequest"] = 0
@@ -261,6 +251,7 @@ def handleDisconnect(*args, **kwargs):
     player_uuid = args[0][1:5]
     for player in players:
         if player["uuid"] == player_uuid:
+            connected_sockets.pop(player_uuid)
             players.remove(player)
             break
 
@@ -268,12 +259,12 @@ async def handleLevelDataRequest(*args, **kwargs):
     compressedLevelData = compress_2d_list(level)
     await args[1].send(compressedLevelData.decode("latin-1"))
     
-mappings = {15: handleGetData, 1: handleDisconnect, 7: handleLevelDataRequest}
+mappings = {3: handleGetData, 1: handleDisconnect, 7: handleLevelDataRequest}
 
 
 async def handleBinary(data, websocket):
     try:
-        data_type = data[0] & 0x0F
+        data_type = data[0] & 0x07
         if data_type in mappings:
             await mappings[data_type](data, websocket)
     except Exception:
@@ -283,11 +274,41 @@ async def handleBinary(data, websocket):
 async def periodic_update():
     while True:
         try:
-            await asyncio.sleep(0.0166)
+            await asyncio.sleep(0.0333)
             collison()
             updatePlayerVelocities()
+            await sendPlayerData()
         except Exception as e:
             print(f"Error in periodic_update: {e}")
+
+async def sendPlayerData():
+    for key, value in connected_sockets.items():
+        player_with_uuid = next((player for player in players if player["uuid"] == key), None)
+        if not player_with_uuid:
+            continue
+
+        copy_of_players = copy.deepcopy(players)
+        for player in copy_of_players:
+            del player["lastRequest"], player["w"], player["a"], player["s"], player["d"], player["xvel"], player["yvel"]
+            
+            if player["uuid"] != key:
+                # No need to give player data if the player is far away
+                dis = distance(player_with_uuid["x"], player_with_uuid["y"], player["x"], player["y"])
+                if dis >= 1500:
+                    copy_of_players.remove(player)
+                # No need to give player data if the player if further than flashlight range and their light is off
+                elif dis >= LIGHT_RANGE and player["flashLightStatus"] == 0:
+                    copy_of_players.remove(player)
+                else:
+                    player["x"] = round(player["x"], 1)
+                    player["y"] = round(player["y"], 1)
+            else:
+                player["x"] = round(player["x"], 1)
+                player["y"] = round(player["y"], 1)
+
+        compressed_data = compressPlayerData(key, copy_of_players)
+        if compressed_data:
+            await value.send(compressed_data)
 
 
 key_actions = {
